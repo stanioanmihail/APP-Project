@@ -11,7 +11,9 @@
  
 // C99 doesn't define M_PI (GNU-C99 does)
 #define M_PI 3.14159265358979323846264338327
- 
+
+#define DEBUG 0 
+
 /*
  * Loading part taken from
  * http://www.vbforums.com/showthread.php?t=261522
@@ -60,7 +62,7 @@ typedef struct {
  
 // Use short int instead `unsigned char' so that we can
 // store negative values.
-typedef short int pixel_t;
+typedef unsigned char pixel_t;
  
 pixel_t *load_bmp(const char *filename,
                   bitmap_info_header_t *bitmapInfoHeader)
@@ -105,6 +107,7 @@ pixel_t *load_bmp(const char *filename,
     if (bitmapInfoHeader->compress_type != 0)
         fprintf(stderr, "Warning, compression is not supported.\n");
  
+    printf("[Read] Offset is = %d\n",  bitmapFileHeader.bmp_offset);
     // move file point to the beginning of bitmap data
     if (fseek(filePtr, bitmapFileHeader.bmp_offset, SEEK_SET)) {
         fclose(filePtr);
@@ -114,7 +117,12 @@ pixel_t *load_bmp(const char *filename,
     // allocate enough memory for the bitmap image data
     pixel_t *bitmapImage = malloc(bitmapInfoHeader->bmp_bytesz *
                                   sizeof(pixel_t));
- 
+
+    if(DEBUG) { 
+    	printf("Total size of bitmapImage in byes is = %d\n",bitmapInfoHeader->bmp_bytesz);
+    	printf("Total size of bitmapImage is=%d\n", bitmapInfoHeader->bmp_bytesz *sizeof(pixel_t));
+    }
+
     // verify memory allocation
     if (bitmapImage == NULL) {
         fclose(filePtr);
@@ -122,22 +130,36 @@ pixel_t *load_bmp(const char *filename,
     }
  
     // read in the bitmap image data
-    size_t pad, count=0;
+    size_t count=0, pad1;
     unsigned char c;
-    pad = 4*ceil(bitmapInfoHeader->bitspp*bitmapInfoHeader->width/32.) - bitmapInfoHeader->width;
+    //pad = 4*ceil(bitmapInfoHeader->bitspp*bitmapInfoHeader->width/32.) - bitmapInfoHeader->width;
+    pad1 = 4*floor((bitmapInfoHeader->bitspp*bitmapInfoHeader->width+31)/32) - (bitmapInfoHeader->width * 3);
+
+    if(DEBUG) {
+    	printf("pad1 = %d\n", pad1);
+    	printf("Bits per pixel=%d\n",bitmapInfoHeader->bitspp);
+    	printf("Pixel per row=%d\n",bitmapInfoHeader->width);
+    }
+
     for(size_t i=0; i<bitmapInfoHeader->height; i++){
 	    for(size_t j=0; j<bitmapInfoHeader->width; j++){
-		    if (fread(&c, sizeof(unsigned char), 1, filePtr) != 1) {
-			    fclose(filePtr);
-			    return NULL;
-		    }
-		    bitmapImage[count++] = (pixel_t) c;
+		for( int k = 0; k < 3; k++) {//Pentru fiecare iteratie din width trebuie sa extragem 3 elemente	
+		    	if (fread(&c, sizeof(unsigned char), 1, filePtr) != 1) {
+				    fclose(filePtr);
+				    return NULL;
+		    	}
+		    	bitmapImage[count++] = (pixel_t) c;
+		}
 	    }
-	    fseek(filePtr, pad, SEEK_CUR);
+	    fseek(filePtr, pad1, SEEK_CUR);
+    }
+
+    if(DEBUG) {
+    	printf("Count is = %d\n", count); 
     }
  
-    // If we were using unsigned char as pixel_t, then:
-    // fread(bitmapImage, 1, bitmapInfoHeader->bmp_bytesz, filePtr);
+   // If we were using unsigned char as pixel_t, then:
+    //fread(bitmapImage, 1, bitmapInfoHeader->bmp_bytesz, filePtr);
  
     // close file and return bitmap image data
     fclose(filePtr);
@@ -157,12 +179,17 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
         fclose(filePtr);
         return true;
     }
- 
+
+    //Am sters shftarea lui 1 pentru ca nu folosim o tabele de culori intre ultimul header si aray-ul de pixeli 
     const uint32_t offset = sizeof(bmpfile_magic_t) +
                             sizeof(bmpfile_header_t) +
-                            sizeof(bitmap_info_header_t) +
-                            ((1U << bmp_ih->bitspp) * 4);
- 
+                            sizeof(bitmap_info_header_t);
+
+    if(DEBUG) {
+    	printf("Offset is = %d\n", offset); 
+    	printf("Size   is = %d\n", bmp_ih->bmp_bytesz);
+    }
+
     const bmpfile_header_t bmp_fh = {
         .filesz = offset + bmp_ih->bmp_bytesz,
         .creator1 = 0,
@@ -179,32 +206,42 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
         return true;
     }
  
-    // Palette
-    for (size_t i = 0; i < (1U << bmp_ih->bitspp); i++) {
-        const rgb_t color = {(uint8_t)i, (uint8_t)i, (uint8_t)i};
-        if (fwrite(&color, sizeof(rgb_t), 1, filePtr) != 1) {
-            fclose(filePtr);
-            return true;
-        }
-    }
- 
     // We use int instead of uchar, so we can't write img
     // in 1 call any more.
-    // fwrite(data, 1, bmp_ih->bmp_bytesz, filePtr);
+    //fwrite(data, 1, bmp_ih->bmp_bytesz, filePtr);
  
     // Padding: http://en.wikipedia.org/wiki/BMP_file_format#Pixel_storage
-    size_t pad = 4*ceil(bmp_ih->bitspp*bmp_ih->width/32.) - bmp_ih->width;
+    size_t pad1 = 4*floor((bmp_ih->bitspp*bmp_ih->width+31)/32) - (bmp_ih->width * 3); 
+   
+    if(DEBUG) { 
+	    printf("Pad1 is = %d\n", pad1);
+    }
+
     unsigned char c;
+    int k = 0;
     for(size_t i=0; i < bmp_ih->height; i++) {
-	    for(size_t j=0; j < bmp_ih->width; j++) {
-		    c = (unsigned char) data[j + bmp_ih->width*i];
-		    if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
-			    fclose(filePtr);
-			    return true;
-		    }
+	    for(size_t j=0; j < bmp_ih->width; j++) {//Aceeasi idee ca la citire; extragem cate 3 elemente la fiecare iteratie din width
+		c = (unsigned char) data[k++];
+		if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
+		    fclose(filePtr);
+		    return true;
+	 	}
+
+		c = (unsigned char) data[k++];
+		if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
+		    fclose(filePtr);
+		    return true;
+	 	}
+
+		c = (unsigned char) data[k++];
+		if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
+		    fclose(filePtr);
+		    return true;
+	 	}
 	    }
+
 	    c = 0;
-	    for(size_t j=0; j<pad; j++)
+	    for(size_t j=0; j<pad1; j++)
 		    if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
 			    fclose(filePtr);
 			    return true;
@@ -226,8 +263,8 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
     float min = FLT_MAX, max = -FLT_MAX;
  
     if (normalize)
-        for (int m = khalf; m < nx - khalf; m++)
-            for (int n = khalf; n < ny - khalf; n++) {
+        for (int n = khalf; n < nx - khalf; n++)
+            for (int m = khalf; m < ny - khalf; m++) {
                 float pixel = 0.0;
                 size_t c = 0;
                 for (int j = -khalf; j <= khalf; j++)
@@ -241,8 +278,8 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
                     max = pixel;
                 }
  
-    for (int m = khalf; m < nx - khalf; m++)
-        for (int n = khalf; n < ny - khalf; n++) {
+    for (int n = khalf; n < nx - khalf; n++)
+        for (int m = khalf; m < ny - khalf; m++) {
             float pixel = 0.0;
             size_t c = 0;
             for (int j = -khalf; j <= khalf; j++)
@@ -304,8 +341,8 @@ pixel_t *canny_edge_detection(const pixel_t *in,
                               const int tmin, const int tmax,
                               const float sigma)
 {
-    const int nx = bmp_ih->width;
-    const int ny = bmp_ih->height;
+    const int ny = bmp_ih->width;
+    const int nx = bmp_ih->height;
  
     pixel_t *G = calloc(nx * ny * sizeof(pixel_t), 1);
     pixel_t *after_Gx = calloc(nx * ny * sizeof(pixel_t), 1);
@@ -322,7 +359,7 @@ pixel_t *canny_edge_detection(const pixel_t *in,
  
     gaussian_filter(in, out, nx, ny, sigma);
  
-    const float Gx[] = {-1, 0, 1,
+/*    const float Gx[] = {-1, 0, 1,
                         -2, 0, 2,
                         -1, 0, 1};
  
@@ -415,7 +452,7 @@ pixel_t *canny_edge_detection(const pixel_t *in,
     free(after_Gy);
     free(G);
     free(nms);
- 
+ */
     return out;
 }
  
@@ -435,19 +472,29 @@ int main(const int argc, const char ** const argv)
  
     printf("Info: %d x %d x %d\n", ih.width, ih.height, ih.bitspp);
  
-    const pixel_t *out_bitmap_data =
+    /*const pixel_t *out_bitmap_data =
         canny_edge_detection(in_bitmap_data, &ih, 45, 50, 1.0f);
     if (out_bitmap_data == NULL) {
         fprintf(stderr, "main: failed canny_edge_detection.\n");
         return 1;
-    }
+    }*/
+
+   /*int c = 0;
+   for (int i = 0; i < ih.height; i++) {
+	for (int j = 0; j < ih.width; j++) {
+		printf("%.2X %.2X %.2X", in_bitmap_data[c], in_bitmap_data[c+1], in_bitmap_data[c+2]);
+		c += 3;
+	}
+	printf("\n");
+   }*/
  
-    if (save_bmp("out.bmp", &ih, out_bitmap_data)) {
+    //!!!Ca sa testezi blur-ul trebuie sa pui out_bitmap_data
+    if (save_bmp("test_out.bmp", &ih, in_bitmap_data)) {
         fprintf(stderr, "main: BMP image not saved.\n");
         return 1;
     }
  
     free((pixel_t*)in_bitmap_data);
-    free((pixel_t*)out_bitmap_data);
+    //free((pixel_t*)out_bitmap_data);
     return 0;
 }
