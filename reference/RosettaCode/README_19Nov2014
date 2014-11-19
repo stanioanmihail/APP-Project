@@ -1,0 +1,5 @@
+1) Facem wiki!!!!!!!
+2) Implementare seriala opencv pentru ca are niste librarii in spate, ce permite lucrul mai facil cu mai multe formate de imagini
+3) Cum pararelizam in OpenMP, MPI, Pthreads
+4) Comparatie rezultate seriala noastra si opencv
+5) Pana saptamana viitoare trebuie sa avem varianta seriala gata si pe baza ei sa incepem paralelizarea
