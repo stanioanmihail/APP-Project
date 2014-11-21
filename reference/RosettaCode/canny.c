@@ -62,6 +62,15 @@ typedef struct {
 // Use short int instead `unsigned char' so that we can
 // store negative values.
 typedef unsigned char pixel_t;
+
+
+float min3(float a, float b, float c) {
+	
+	float temp = (a < b) ? a : b;
+	float min  = (c < temp) ? c : temp;
+
+	return min;
+}
  
 rgb_t *load_bmp(const char *filename,
                   bitmap_info_header_t *bitmapInfoHeader)
@@ -131,7 +140,6 @@ rgb_t *load_bmp(const char *filename,
     // read in the bitmap image data
     size_t count=0, pad1;
     rgb_t c;
-    //pad = 4*ceil(bitmapInfoHeader->bitspp*bitmapInfoHeader->width/32.) - bitmapInfoHeader->width;
     pad1 = 4*floor((bitmapInfoHeader->bitspp*bitmapInfoHeader->width+31)/32) - (bitmapInfoHeader->width * 3);
 
     if(DEBUG) {
@@ -142,13 +150,11 @@ rgb_t *load_bmp(const char *filename,
 
     for(size_t i=0; i<bitmapInfoHeader->height; i++){
 	    for(size_t j=0; j<bitmapInfoHeader->width; j++){
-		//for( int k = 0; k < 3; k++) {//Pentru fiecare iteratie din width trebuie sa extragem 3 elemente	
 		    	if (fread(&c, sizeof(rgb_t), 1, filePtr) != 1) {
 				    fclose(filePtr);
 				    return NULL;
 		    	}
 		    	bitmapImage[count++] = c;
-		//}
 	    }
 	    fseek(filePtr, pad1, SEEK_CUR);
     }
@@ -156,9 +162,6 @@ rgb_t *load_bmp(const char *filename,
     if(DEBUG) {
     	printf("Count is = %d\n", count); 
     }
- 
-   // If we were using unsigned char as pixel_t, then:
-    //fread(bitmapImage, 1, bitmapInfoHeader->bmp_bytesz, filePtr);
  
     // close file and return bitmap image data
     fclose(filePtr);
@@ -205,11 +208,6 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
         return true;
     }
  
-    // We use int instead of uchar, so we can't write img
-    // in 1 call any more.
-    //fwrite(data, 1, bmp_ih->bmp_bytesz, filePtr);
- 
-    // Padding: http://en.wikipedia.org/wiki/BMP_file_format#Pixel_storage
     size_t pad1 = 4*floor((bmp_ih->bitspp*bmp_ih->width+31)/32) - (bmp_ih->width * 3); 
    
     if(DEBUG) { 
@@ -225,23 +223,6 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
 			fclose(filePtr);
 			return true;
 		}
-		/*c = (unsigned char) data[k++];
-		if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
-		    fclose(filePtr);
-		    return true;
-	 	}
-
-		c = (unsigned char) data[k++];
-		if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
-		    fclose(filePtr);
-		    return true;
-	 	}
-
-		c = (unsigned char) data[k++];
-		if (fwrite(&c, sizeof(char), 1, filePtr) != 1) {
-		    fclose(filePtr);
-		    return true;
-	 	}*/
 	    }
 
 	    c = 0;
@@ -257,7 +238,7 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
 }
  
 // if normalize is true, map pixels to range 0..MAX_BRIGHTNESS
-void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
+void convolution(const rgb_t *in, rgb_t *out, const float *kernel,
                  const int nx, const int ny, const int kn,
                  const bool normalize)
 {
@@ -268,71 +249,74 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
  
     if (normalize) {
         for (int n = 0; n < ny; n++) {
-            for (int m = 0; m < nx; m+=3) {
-		for(int k = 0; k < 3; k++) {
-                	float pixel = 0.0;
-                	size_t c = 0;
+            for (int m = 0; m < nx; m++) {
+                	float pixelR = 0.0;
+			float pixelG = 0.0;
+			float pixelB = 0.0;
+                	int c = 0;
 			int row = n * nx;
 			int col = m;
-			int elem = row + col;
                 	for (int i = -khalf; i <= khalf; i++) {
                     		for (int j = -khalf; j <= khalf; j++) {
-                        		//pixel += in[(n - j) * nx + m - i] * kernel[c];
-                        		//c++;
 					int row_sub = row + i * nx;
 					int col_sub = col + j;
 					int elem_sub = row_sub + col_sub;
-					if (row_sub < 0 || row_sub >= 3*nx*ny || (elem_sub < row_sub || elem_sub > (row_sub +nx))) {
+					if (row_sub < 0 || row_sub >= nx*ny || (elem_sub < row_sub || elem_sub > (row_sub +nx))) {
 						c++;
 						continue;
 					}
-					pixel += in[elem_sub] * kernel[c++];
+					pixelR += in[elem_sub].r * kernel[c];
+					pixelG += in[elem_sub].g * kernel[c];
+					pixelB += in[elem_sub].b * kernel[c];
+					c++;
+					
                     		}
 			}
-		
+			float pixel = min3(pixelR, pixelG, pixelB);
                 	if (pixel < min) {
                     		min = pixel;
 			}
 			if (pixel > max) {
                     		max = pixel;
 			}
-		}
       	     }
 	}
      }
 
 	int counter = 0;
 	for (int n = 0; n < ny; n++) {
-            for (int m = 0; m < 3*nx; m++) {
-		//for(int k = 0; k < 3; k++) {
-                	float pixel = 0.0;
-                	size_t c = 0;
+            for (int m = 0; m < nx; m++) {
+                	float pixelR = 0.0;
+			float pixelG = 0.0;
+			float pixelB = 0.0;
+                	int c = 0;
 			int row = n * nx;
 			int col = m;
-			int elem = row + col;
                 	for (int i = -khalf; i <= khalf; i++) {
                     		for (int j = -khalf; j <= khalf; j++) {
-                        		//pixel += in[(n - j) * nx + m - i] * kernel[c];
-                        		//c++;
 					int row_sub = row + i * nx;
 					int col_sub = col + j;
-					int elem_sub = row_sub + col_sub;// + k;
-					if (row_sub < 0 || row_sub >= 3*nx*ny || (elem_sub < row_sub || elem_sub > (row_sub +nx))) {
+					int elem_sub = row_sub + col_sub;
+					if (row_sub < 0 || row_sub >= nx*ny || (elem_sub < row_sub || elem_sub > (row_sub +nx))) {
 						c++;
 						continue;
 					}
-					pixel += in[elem_sub] * kernel[c++];
+					pixelR += 1.0*in[elem_sub].r * kernel[c];
+					pixelG += 1.0*in[elem_sub].g * kernel[c];
+					pixelB += 1.0*in[elem_sub].b * kernel[c];
+					c++;
                     		}
 			}
-			if(normalize) {
-				pixel = MAX_BRIGHTNESS * (pixel - min) / (max - min);
+			if (normalize) {
+				pixelR = MAX_BRIGHTNESS * (pixelR - min) / (max - min);
+				pixelG = MAX_BRIGHTNESS * (pixelG - min) / (max - min);
+				pixelB = MAX_BRIGHTNESS * (pixelB - min) / (max - min);
 			}
-			out[counter++] = (pixel_t)pixel;
-			//printf("%.2X ", out[counter-1]);
-		//}
-		//printf("\t");
+			out[counter].r = pixelR;
+			out[counter].g = pixelG;
+			out[counter].b = pixelB;
+			counter++;
 	    }
-		//printf("\n");
 	}
  
     /*for (int n = khalf; n < nx - khalf; n++)
@@ -363,7 +347,7 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
  * 2.5 <= sigma < 3.0 : 13 ...
  * kernelSize = 2 * int(2*sigma) + 3;
  */
-void gaussian_filter(const pixel_t *in, pixel_t *out,
+void gaussian_filter(const rgb_t *in, rgb_t *out,
                      const int nx, const int ny, const float sigma)
 {
     const int n = 2 * (int)(2 * sigma) + 3;
@@ -378,13 +362,11 @@ void gaussian_filter(const pixel_t *in, pixel_t *out,
             kernel[c] = exp(-0.5 * (pow((i - mean) / sigma, 2.0) +
                                     pow((j - mean) / sigma, 2.0)))
                         / (2 * M_PI * sigma * sigma);
-            printf("[%d] %f", c, kernel[c]);
             c++;
         }
-	printf("\n");
     }
  
-    convolution(in, out, kernel, nx, ny, n, true);
+    convolution(in, out, kernel, nx, ny, n, false);
 }
  
 /*
@@ -396,7 +378,7 @@ void gaussian_filter(const pixel_t *in, pixel_t *out,
  *
  * Note: T1 and T2 are lower and upper thresholds.
  */
-pixel_t *canny_edge_detection(const pixel_t *in,
+rgb_t *canny_edge_detection(const rgb_t *in,
                               const bitmap_info_header_t *bmp_ih,
                               const int tmin, const int tmax,
                               const float sigma)
@@ -404,11 +386,11 @@ pixel_t *canny_edge_detection(const pixel_t *in,
     const int nx = bmp_ih->width;
     const int ny = bmp_ih->height;
  
-    pixel_t *G = calloc(nx * ny * sizeof(pixel_t), 1);
-    pixel_t *after_Gx = calloc(nx * ny * sizeof(pixel_t), 1);
-    pixel_t *after_Gy = calloc(nx * ny * sizeof(pixel_t), 1);
-    pixel_t *nms = calloc(nx * ny * sizeof(pixel_t), 1);
-    pixel_t *out = malloc(bmp_ih->bmp_bytesz * sizeof(pixel_t));
+    rgb_t *G = calloc(nx * ny * sizeof(rgb_t), 1);
+    rgb_t *after_Gx = calloc(nx * ny * sizeof(rgb_t), 1);
+    rgb_t *after_Gy = calloc(nx * ny * sizeof(rgb_t), 1);
+    rgb_t *nms = calloc(nx * ny * sizeof(rgb_t), 1);
+    rgb_t *out = malloc(bmp_ih->bmp_bytesz * sizeof(rgb_t));
  
     if (G == NULL || after_Gx == NULL || after_Gy == NULL ||
         nms == NULL || out == NULL) {
@@ -418,8 +400,9 @@ pixel_t *canny_edge_detection(const pixel_t *in,
     }
  
     gaussian_filter(in, out, nx, ny, sigma);
- 
-/*    const float Gx[] = {-1, 0, 1,
+
+    //Comment this part onward if you want to see if gaussian filter is working properly 
+    const float Gx[] = {-1, 0, 1,
                         -2, 0, 2,
                         -1, 0, 1};
  
@@ -431,17 +414,20 @@ pixel_t *canny_edge_detection(const pixel_t *in,
  
     convolution(out, after_Gy, Gy, nx, ny, 3, false);
  
-    for (int i = 1; i < nx - 1; i++)
-        for (int j = 1; j < ny - 1; j++) {
-            const int c = i + nx * j;
-            // G[c] = abs(after_Gx[c]) + abs(after_Gy[c]);
-            G[c] = (pixel_t)hypot(after_Gx[c], after_Gy[c]);
+    int c = 0;
+    for (int i = 0; i < ny; i++) {
+        for (int j = 0; j < nx; j++) {
+            G[c].r = hypot(after_Gx[c].r, after_Gy[c].r);
+	    G[c].g = hypot(after_Gx[c].g, after_Gy[c].g);
+	    G[c].b = hypot(after_Gx[c].b, after_Gy[c].b);
+	    c++;
         }
+    }
  
     // Non-maximum suppression, straightforward implementation.
-    for (int i = 1; i < nx - 1; i++)
-        for (int j = 1; j < ny - 1; j++) {
-            const int c = i + nx * j;
+    /*for (int i = 0; i < ny; i++)
+        for (int j = 0; j < nx; j++) {
+            const int c = i * nx + j;
             const int nn = c - nx;
             const int ss = c + nx;
             const int ww = c + 1;
@@ -451,12 +437,18 @@ pixel_t *canny_edge_detection(const pixel_t *in,
             const int sw = ss + 1;
             const int se = ss - 1;
  
-            const float dir = (float)(fmod(atan2(after_Gy[c],
-                                                 after_Gx[c]) + M_PI,
+            const float dirR = (float)(fmod(atan2(after_Gy[c].r,
+                                                 after_Gx[c].r) + M_PI,
                                            M_PI) / M_PI) * 8;
- 
-            if (((dir <= 1 || dir > 7) && G[c] > G[ee] &&
-                 G[c] > G[ww]) || // 0 deg
+ 	    const float dirG = (float)(fmod(atan2(after_Gy[c].g,
+                                                 after_Gx[c].g) + M_PI,
+                                           M_PI) / M_PI) * 8;
+	    const float dirB = (float)(fmod(atan2(after_Gy[c].b,
+                                                 after_Gx[c].b) + M_PI,
+                                           M_PI) / M_PI) * 8;
+
+            if (((dirR <= 1 || dirR > 7) && G[c].r > G[ee].r &&
+                 G[c].r > G[ww].r) || // 0 deg
                 ((dir > 1 && dir <= 3) && G[c] > G[nw] &&
                  G[c] > G[se]) || // 45 deg
                 ((dir > 3 && dir <= 5) && G[c] > G[nn] &&
@@ -532,29 +524,20 @@ int main(const int argc, const char ** const argv)
  
     printf("Info: %d x %d x %d\n", ih.width, ih.height, ih.bitspp);
  
-    /*const pixel_t *out_bitmap_data =
-        canny_edge_detection(in_bitmap_data, &ih, 45, 50, 0.5f);
+    const rgb_t *out_bitmap_data =
+        canny_edge_detection(in_bitmap_data, &ih, 45, 50, 1.0f);
     if (out_bitmap_data == NULL) {
         fprintf(stderr, "main: failed canny_edge_detection.\n");
         return 1;
-    }*/
+    }
 
-   /*int c = 0;
-   for (int i = 0; i < ih.height; i++) {
-	for (int j = 0; j < ih.width; j++) {
-		printf("%.2X %.2X %.2X", in_bitmap_data[c], in_bitmap_data[c+1], in_bitmap_data[c+2]);
-		c += 3;
-	}
-	printf("\n");
-   }*/
- 
     //!!!Ca sa testezi blur-ul trebuie sa pui out_bitmap_data
-    if (save_bmp("test_out.bmp", &ih, in_bitmap_data)) {
+    if (save_bmp("test_out.bmp", &ih, out_bitmap_data)) {
         fprintf(stderr, "main: BMP image not saved.\n");
         return 1;
     }
  
     free((pixel_t*)in_bitmap_data);
-    //free((pixel_t*)out_bitmap_data);
+    free((pixel_t*)out_bitmap_data);
     return 0;
 }
