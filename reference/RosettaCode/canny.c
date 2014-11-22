@@ -127,8 +127,8 @@ rgb_t *load_bmp(const char *filename,
                                   sizeof(rgb_t));
 
     if(DEBUG) { 
-    	printf("Total size of bitmapImage in byes is = %d\n",bitmapInfoHeader->bmp_bytesz);
-    	printf("Total size of bitmapImage is=%d\n", bitmapInfoHeader->bmp_bytesz *sizeof(pixel_t));
+    	//printf("Total size of bitmapImage in byes is = %d\n",bitmapInfoHeader->bmp_bytesz);
+    	//printf("Total size of bitmapImage is=%d\n", bitmapInfoHeader->bmp_bytesz *sizeof(pixel_t));
     }
 
     // verify memory allocation
@@ -143,9 +143,9 @@ rgb_t *load_bmp(const char *filename,
     pad1 = 4*floor((bitmapInfoHeader->bitspp*bitmapInfoHeader->width+31)/32) - (bitmapInfoHeader->width * 3);
 
     if(DEBUG) {
-    	printf("pad1 = %d\n", pad1);
-    	printf("Bits per pixel=%d\n",bitmapInfoHeader->bitspp);
-    	printf("Pixel per row=%d\n",bitmapInfoHeader->width);
+    	//printf("pad1 = %d\n", pad1);
+    	//printf("Bits per pixel=%d\n",bitmapInfoHeader->bitspp);
+    	//printf("Pixel per row=%d\n",bitmapInfoHeader->width);
     }
 
     for(size_t i=0; i<bitmapInfoHeader->height; i++){
@@ -160,7 +160,7 @@ rgb_t *load_bmp(const char *filename,
     }
 
     if(DEBUG) {
-    	printf("Count is = %d\n", count); 
+    	//printf("Count is = %d\n", count); 
     }
  
     // close file and return bitmap image data
@@ -211,7 +211,7 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
     size_t pad1 = 4*floor((bmp_ih->bitspp*bmp_ih->width+31)/32) - (bmp_ih->width * 3); 
    
     if(DEBUG) { 
-	    printf("Pad1 is = %d\n", pad1);
+	    //printf("Pad1 is = %d\n", pad1);
     }
 
     unsigned char c;
@@ -382,24 +382,38 @@ int condition(int index, int row, int width) {
 
 void my_switch(int k, rgb_t* G, rgb_t* nms, int c, int ok) {
 
+	/*
+	*	[john] observatii:
+	*      -  daca pui 0 in loc de 255 vei observa ca toata poza se face alba mai putin marginile	
+	*      -  problema ar putea fi, dar e vaga solutia, ca matrice nms sa nu fie direct matricea out 
+			de la blurul gaussian ci o matrice copie ( nu pot justifica de ce - feeling )
+	*
+	*/
 	switch(k) {
 		case 0:
 			if (ok) {
-				nms[c].r = G[c].r;
+				
+				//nms[c].r = G[c].r;
+				nms[c].r = 255;
+				//nms[c].r = 0;
 			} else {
 				nms[c].r = 0;
 			}
 			break;
 		case 1:
 			if (ok) {
-				nms[c].g = G[c].g;
+				//nms[c].g = G[c].g;
+				nms[c].g = 255;
+				//nms[c].g = 0;
 			} else {
 				nms[c].g = 0;
 			}
 			break;
 		case 2:
 			if (ok) {
-				nms[c].b = G[c].b;
+				//nms[c].b = G[c].b;
+				nms[c].b = 255;
+				//nms[c].b = 0;
 			} else {
 				nms[c].b = 0;
 			}
@@ -411,7 +425,14 @@ void my_switch(int k, rgb_t* G, rgb_t* nms, int c, int ok) {
 
 void suppression(const float dirR, int k , int i, int nx, rgb_t* G, rgb_t* nms, const int c, const int nn, const int ss,
 		 const int ee, const int ww, const int nw, const int se, const int ne, const int sw) {
-	    
+
+	/* [john] varianta initiala facea aceaiasi operatie pe toate componentele de culoare comparand cu G[c].r
+	*
+	*/
+
+
+	//k == 0 means color is red
+	if(k == 0){
 	   if (dirR <= 1 || dirR >7) {
 		if (condition(ee, i * nx, nx) && condition(ww, i * nx, nx)) {
 			if (G[c].r > G[ee].r && G[c].r > G[ww].r) {
@@ -477,11 +498,152 @@ void suppression(const float dirR, int k , int i, int nx, rgb_t* G, rgb_t* nms, 
 			my_switch(k, G, nms, c, 0);
 		}
 	    }
+	}
+
+	//k == 1 means color is green
+	if(k == 1){
+	    
+	   if (dirR <= 1 || dirR >7) {
+		if (condition(ee, i * nx, nx) && condition(ww, i * nx, nx)) {
+			if (G[c].g > G[ee].g && G[c].g > G[ww].g) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(ee, i * nx, nx) && (condition(ww, i * nx, nx) && G[c].g > G[ww].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(ww, i * nx, nx) && (condition(ee, i * nx, nx) && G[c].g > G[ee].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 1 && dirR <= 3) {
+		if (condition(nw, (i-1) * nx, nx) && condition(se, (i+1) * nx, nx)) {
+			if (G[c].g > G[nw].g && G[c].g > G[se].g) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(nw, (i-1) * nx, nx) && (condition(se, (i+1) * nx, nx) && G[c].g > G[se].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(se, (i+1) * nx, nx) && (condition(nw, (i-1) * nx, nx) && G[c].g > G[nw].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 3 && dirR <= 5) {
+		if (condition(nn, (i-1) * nx, nx) && condition(ss, (i+1) * nx, nx)) {
+			if (G[c].g > G[nn].g && G[c].g > G[ss].g) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(nn, (i-1) * nx, nx) && (condition(ss, (i+1) * nx, nx) && G[c].g > G[ss].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(ss, (i+1) * nx, nx) && (condition(nn, (i-1) * nx, nx) && G[c].g > G[nn].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 5 && dirR <=7) {
+		if (condition(ne, (i-1) * nx, nx) && condition(sw, (i+1) * nx, nx)) {
+			if (G[c].g > G[ne].g && G[c].g > G[sw].g) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(ne, (i-1) * nx, nx) && (condition(sw, (i+1) * nx, nx) && G[c].g > G[sw].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(sw, (i+1) * nx, nx) && (condition(ne, (i-1) * nx, nx) && G[c].g > G[ne].g)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    }
+	}
+
+	//k == 2 means color is blue
+	if(k == 2){
+	    
+	   if (dirR <= 1 || dirR >7) {
+		if (condition(ee, i * nx, nx) && condition(ww, i * nx, nx)) {
+			if (G[c].b > G[ee].b && G[c].b > G[ww].b) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(ee, i * nx, nx) && (condition(ww, i * nx, nx) && G[c].b > G[ww].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(ww, i * nx, nx) && (condition(ee, i * nx, nx) && G[c].b > G[ee].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 1 && dirR <= 3) {
+		if (condition(nw, (i-1) * nx, nx) && condition(se, (i+1) * nx, nx)) {
+			if (G[c].b > G[nw].b && G[c].b > G[se].b) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(nw, (i-1) * nx, nx) && (condition(se, (i+1) * nx, nx) && G[c].b > G[se].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(se, (i+1) * nx, nx) && (condition(nw, (i-1) * nx, nx) && G[c].b > G[nw].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 3 && dirR <= 5) {
+		if (condition(nn, (i-1) * nx, nx) && condition(ss, (i+1) * nx, nx)) {
+			if (G[c].b > G[nn].b && G[c].b > G[ss].b) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(nn, (i-1) * nx, nx) && (condition(ss, (i+1) * nx, nx) && G[c].b > G[ss].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(ss, (i+1) * nx, nx) && (condition(nn, (i-1) * nx, nx) && G[c].b > G[nn].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 5 && dirR <=7) {
+		if (condition(ne, (i-1) * nx, nx) && condition(sw, (i+1) * nx, nx)) {
+			if (G[c].b > G[ne].b && G[c].b > G[sw].b) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(ne, (i-1) * nx, nx) && (condition(sw, (i+1) * nx, nx) && G[c].b > G[sw].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(sw, (i+1) * nx, nx) && (condition(ne, (i-1) * nx, nx) && G[c].b > G[ne].b)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    }
+	}
 
 }
 
 
-
+/*
 void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, const int tmax, const int tmin) {
  
 	int current_row[10000];
@@ -531,7 +693,7 @@ void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, c
                 } while (nedges > 0);
             }
 }
-
+*/
 
 /*
  * Links:
@@ -587,6 +749,13 @@ rgb_t *canny_edge_detection(const rgb_t *in,
 	    c++;
         }
     }
+
+    /*
+     * [john] intrebare: de ce G si nms sunt de dimensiuni diferite fata de matricea mama out
+     * - am incercat sa pun la supression
+	    suppression(dirR, 0, i, nx, out, nns, c, nn, ss, ee, ww, nw, se, ne, sw); si mi-am luat segfault
+	- nu prea stiu de unde vin si de unde pleaca matricele ..asa ca ramane sa te mai intreb 
+    */
  
     // Non-maximum suppression, straightforward implementation.
     for (int i = 0; i < ny; i++)
@@ -612,10 +781,13 @@ rgb_t *canny_edge_detection(const rgb_t *in,
                                            M_PI) / M_PI) * 8;
 
 	   //Al 2-lea argument trimis imi dicteaza mie ce am: r, g sau b
-	    suppression(dirR, 0, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
-	    suppression(dirG, 1, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
-	    suppression(dirB, 2, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    //suppression(dirR, 0, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    //suppression(dirG, 1, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    //suppression(dirB, 2, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
 
+	    suppression(dirR, 0, i, nx, G, out, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    suppression(dirG, 1, i, nx, G, out, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    suppression(dirB, 2, i, nx, G, out, c, nn, ss, ee, ww, nw, se, ne, sw);
 	    /* ce-am facut aici a fost sa iau fiecare directie in parte si sa le tratez pe bucatele
 	     * pentru ca baiatul care a facut codul nu a tratat deloc cazurile de la margine
 	     * Dupa o sa vezi verificarile sunt simetrice pentru fiecare directie, adica
@@ -684,15 +856,17 @@ rgb_t *canny_edge_detection(const rgb_t *in,
                 nms[c] = 0;*/
         }
  
+	printf("ajung aici\n");
     // Reuse array
     // used as a stack. nx*ny/2 elements should be enough.
+/*
     int *edges = (int*) after_Gy;
     memset(out, 0, sizeof(rgb_t) * bmp_ih->bmp_bytesz);
     memset(edges, 0, sizeof(rgb_t) * nx * ny);
  
     // Tracing edges with hysteresis . Non-recursive implementation.
     size_t c = 0;
-    for (int i = 0; j < ny; i++)
+    for (int i = 0; i < ny; i++)
         for (int j = 0; j < nx; j++) {
             if (nms[c] >= tmax && out[c] == 0) { // trace edges
                 out[c] = MAX_BRIGHTNESS;
@@ -723,7 +897,7 @@ rgb_t *canny_edge_detection(const rgb_t *in,
             }
             c++;
         }
- 
+ */
     free(after_Gx);
     free(after_Gy);
     free(G);

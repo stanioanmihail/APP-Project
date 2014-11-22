@@ -43,4 +43,10 @@ typedef struct __attribute__ ((__packed__)) __PixelFormat{
 
 }Pixel;
 
+void PrintBitmapInfo(BitmapInfoHeader *bitmapInfoHeader, BitmapFileHeader *bitmapFileHeader);
+
+Pixel** LoadBitmapFile(char *filename, BitmapInfoHeader *bitmapInfoHeader, BitmapFileHeader *bfileHeader);
+
+void SaveBitmapFile(char *filename, BitmapInfoHeader *bitmapInfoHeader, BitmapFileHeader *bfileHeader, Pixel **pixelMatrix);
+
 #endif //__LOAD_BITMAP

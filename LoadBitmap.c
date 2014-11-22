@@ -124,19 +124,5 @@ void SaveBitmapFile(char *filename, BitmapInfoHeader *bitmapInfoHeader, BitmapFi
 	return;
 }
 
-int main(int argc, char *argv[]){
-	BitmapInfoHeader bitmapInfoHeader;
-	BitmapFileHeader bitmapFileHeader;
-	Pixel **PixelMatrix;
 
-	if(argc != 3){
-		fprintf(stdout, "./<exec> <input bmp file> <output bmp file>\n");
-		fprintf(stderr, "NumberOfArgumentsError\n");
-		return 0;
-	}
-	PixelMatrix = LoadBitmapFile(argv[1], &bitmapInfoHeader, &bitmapFileHeader);
-	SaveBitmapFile(argv[2], &bitmapInfoHeader, &bitmapFileHeader, PixelMatrix);
-	return 0;
-}
-	
 
