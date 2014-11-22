@@ -647,8 +647,43 @@ void suppression(const float dirR, int k , int i, int nx, rgb_t* G, rgb_t* nms, 
 void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, const int tmax, const int tmin) {
  
 	int current_row[10000];
-	if (nms[c] >= tmax && out[c] == 0) { // trace edges
-                out[c] = MAX_BRIGHTNESS;
+	int process = 1;
+	switch(type) {
+		case 0://R
+			if (nms[c].r >= tmax && out[c].r == 0) {
+				process = 1;
+			} else {
+				process = 0;
+			}
+			break;
+		case 1://G
+			if (nms[c].g >= tmax && out[c].g == 0) {
+				process = 1;
+			} else {
+				process = 0;
+			}
+			break;
+		case 2://B
+			if (nms[c].b >= tmax && out[c].b == 0) {
+				process = 1;
+			} else {
+				process = 0;
+			}
+			break;
+		default:
+			break;
+	}
+
+	if (process) { // trace edges
+                
+		if (type == 0) { //R
+			out[c].r = MAX_BRIGHTNESS;
+		} else if (type == 1) { //G
+			out[c].g = MAX_BRIGHTNESS;
+		} else {//B
+			out[c].b = MAX_BRIGHTNESS;
+		}
+
                 int nedges = 1;
                 edges[0] = c;
 		current_row[0] = row;
@@ -668,7 +703,7 @@ void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, c
                     nbs[6] = nbs[1] + 1; // sw
                     nbs[7] = nbs[1] - 1; // se
  
-                    for (int k = 0; k < 8; k++)
+                    for (int k = 0; k < 8; k++) {
 			int ok = 1;
 			if (k == 0 || k == 4 || k == 5) {
 				ok = condition(nbs[k], row-width, width);//Randul de sus
@@ -677,9 +712,45 @@ void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, c
 			} else {
 				ok = condition(nbs[k], row, width); //Rand curent
 			}
+			int process = 1;
+			if (ok) {
+				switch(type) {
+					case 0://R
+						if (nms[nbs[k]].r >= tmin && out[nbs[k]].r == 0) {
+							process = 1;
+						} else {
+							process = 0;
+						}
+						break;
+					case 1://G
+						if (nms[nbs[k]].g >= tmin && out[nbs[k]].g == 0) {
+							process = 1;
+						} else {
+							process = 0;
+						}
+						break;
+					case 2://B
+						if (nms[nbs[k]].b >= tmin && out[nbs[k]].b == 0) {
+							process = 1;
+						} else {
+							process = 0;
+						}
+						break;
+					default:
+						break;
+				}
+			}
 
-                        if (ok && nms[nbs[k]] >= tmin && out[nbs[k]] == 0) {
-                            out[nbs[k]] = MAX_BRIGHTNESS;
+                        if (process && ok) {
+                           
+			   if (type == 0) { //R 
+				out[nbs[k]].r = MAX_BRIGHTNESS;
+			   } else if (type == 1) {//G
+				out[nbs[k]].g = MAX_BRIGHTNESS;
+			   } else {//B
+				out[nbs[k]].b = MAX_BRIGHTNESS;
+			   }
+
                             edges[nedges] = nbs[k];
 			    if (k == 0 || k == 4 || k == 5) {
 				    current_row[nedges] = row - width;
@@ -690,6 +761,7 @@ void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, c
 			    }
                             nedges++;
                         }
+		    }
                 } while (nedges > 0);
             }
 }
@@ -853,10 +925,10 @@ rgb_t *canny_edge_detection(const rgb_t *in,
                  G[c] > G[sw]))   // 135 deg
                 nms[c] = G[c];
             else
-                nms[c] = 0;*/
+                nms[c] = 0;
         }
- 
-	printf("ajung aici\n");
+	*/ 
+	}printf("ajung aici\n");
     // Reuse array
     // used as a stack. nx*ny/2 elements should be enough.
 /*
@@ -866,6 +938,7 @@ rgb_t *canny_edge_detection(const rgb_t *in,
  
     // Tracing edges with hysteresis . Non-recursive implementation.
     size_t c = 0;
+    c = 0;
     for (int i = 0; i < ny; i++)
         for (int j = 0; j < nx; j++) {
             if (nms[c] >= tmax && out[c] == 0) { // trace edges
@@ -895,6 +968,7 @@ rgb_t *canny_edge_detection(const rgb_t *in,
                         }
                 } while (nedges > 0);
             }
+	    hysteresis(out, nms, 0, i, nx, c, edges, tmax, tmin);
             c++;
         }
  */
