@@ -368,7 +368,171 @@ void gaussian_filter(const rgb_t *in, rgb_t *out,
  
     convolution(in, out, kernel, nx, ny, n, false);
 }
+
+int condition(int index, int row, int width) {
+
+	if ( row * width <= index && (row * width + (width-1)) <= index ) {
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
+
+void my_switch(int k, rgb_t* G, rgb_t* nms, int c, int ok) {
+
+	switch(k) {
+		case 0:
+			if (ok) {
+				nms[c].r = G[c].r;
+			} else {
+				nms[c].r = 0;
+			}
+			break;
+		case 1:
+			if (ok) {
+				nms[c].g = G[c].g;
+			} else {
+				nms[c].g = 0;
+			}
+			break;
+		case 2:
+			if (ok) {
+				nms[c].b = G[c].b;
+			} else {
+				nms[c].b = 0;
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+void suppression(const float dirR, int k , int i, int nx, rgb_t* G, rgb_t* nms, const int c, const int nn, const int ss,
+		 const int ee, const int ww, const int nw, const int se, const int ne, const int sw) {
+	    
+	   if (dirR <= 1 || dirR >7) {
+		if (condition(ee, i * nx, nx) && condition(ww, i * nx, nx)) {
+			if (G[c].r > G[ee].r && G[c].r > G[ww].r) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(ee, i * nx, nx) && (condition(ww, i * nx, nx) && G[c].r > G[ww].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(ww, i * nx, nx) && (condition(ee, i * nx, nx) && G[c].r > G[ee].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 1 && dirR <= 3) {
+		if (condition(nw, (i-1) * nx, nx) && condition(se, (i+1) * nx, nx)) {
+			if (G[c].r > G[nw].r && G[c].r > G[se].r) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(nw, (i-1) * nx, nx) && (condition(se, (i+1) * nx, nx) && G[c].r > G[se].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(se, (i+1) * nx, nx) && (condition(nw, (i-1) * nx, nx) && G[c].r > G[nw].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 3 && dirR <= 5) {
+		if (condition(nn, (i-1) * nx, nx) && condition(ss, (i+1) * nx, nx)) {
+			if (G[c].r > G[nn].r && G[c].r > G[ss].r) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(nn, (i-1) * nx, nx) && (condition(ss, (i+1) * nx, nx) && G[c].r > G[ss].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(ss, (i+1) * nx, nx) && (condition(nn, (i-1) * nx, nx) && G[c].r > G[nn].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    } else if (dirR > 5 && dirR <=7) {
+		if (condition(ne, (i-1) * nx, nx) && condition(sw, (i+1) * nx, nx)) {
+			if (G[c].r > G[ne].r && G[c].r > G[sw].r) {
+				//nms[c].r = G[c].r;
+				my_switch(k, G, nms, c, 1);
+			}
+		} else if (!condition(ne, (i-1) * nx, nx) && (condition(sw, (i+1) * nx, nx) && G[c].r > G[sw].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else if (!condition(sw, (i+1) * nx, nx) && (condition(ne, (i-1) * nx, nx) && G[c].r > G[ne].r)) {
+			//nms[c].r = G[c].r;
+			my_switch(k, G, nms, c, 1);
+		} else {
+			//nms[c].r = 0;
+			my_switch(k, G, nms, c, 0);
+		}
+	    }
+
+}
+
+
+
+void hysteresis(rgb_t* out, rgb_t* nms, int row, int width, int c, int* edges, const int tmax, const int tmin) {
  
+	int current_row[10000];
+	if (nms[c] >= tmax && out[c] == 0) { // trace edges
+                out[c] = MAX_BRIGHTNESS;
+                int nedges = 1;
+                edges[0] = c;
+		current_row[0] = row;
+ 
+                do {
+                    nedges--;
+                    const int t = edges[nedges];
+		    int row = current_row[nedges];
+ 
+                    int nbs[8]; // neighbours
+                    nbs[0] = t - width;     // nn
+                    nbs[1] = t + width;     // ss
+                    nbs[2] = t + 1;      // ww
+                    nbs[3] = t - 1;      // ee
+                    nbs[4] = nbs[0] + 1; // nw
+                    nbs[5] = nbs[0] - 1; // ne
+                    nbs[6] = nbs[1] + 1; // sw
+                    nbs[7] = nbs[1] - 1; // se
+ 
+                    for (int k = 0; k < 8; k++)
+			int ok = 1;
+			if (k == 0 || k == 4 || k == 5) {
+				ok = condition(nbs[k], row-width, width);//Randul de sus
+			} else if (k == 1 || k == 6 || k == 7) {
+				ok = condition(nbs[k], row+width, width);//Randul de jos
+			} else {
+				ok = condition(nbs[k], row, width); //Rand curent
+			}
+
+                        if (ok && nms[nbs[k]] >= tmin && out[nbs[k]] == 0) {
+                            out[nbs[k]] = MAX_BRIGHTNESS;
+                            edges[nedges] = nbs[k];
+			    if (k == 0 || k == 4 || k == 5) {
+				    current_row[nedges] = row - width;
+			    } else if(k == 1 || k == 6 || k == 7) {
+				    current_row[nedges] = row + width;
+			    } else {
+				    current_row[nedges] = row;
+			    }
+                            nedges++;
+                        }
+                } while (nedges > 0);
+            }
+}
+
+
 /*
  * Links:
  * http://en.wikipedia.org/wiki/Canny_edge_detector
@@ -425,7 +589,7 @@ rgb_t *canny_edge_detection(const rgb_t *in,
     }
  
     // Non-maximum suppression, straightforward implementation.
-    /*for (int i = 0; i < ny; i++)
+    for (int i = 0; i < ny; i++)
         for (int j = 0; j < nx; j++) {
             const int c = i * nx + j;
             const int nn = c - nx;
@@ -447,6 +611,66 @@ rgb_t *canny_edge_detection(const rgb_t *in,
                                                  after_Gx[c].b) + M_PI,
                                            M_PI) / M_PI) * 8;
 
+	   //Al 2-lea argument trimis imi dicteaza mie ce am: r, g sau b
+	    suppression(dirR, 0, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    suppression(dirG, 1, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
+	    suppression(dirB, 2, i, nx, G, nms, c, nn, ss, ee, ww, nw, se, ne, sw);
+
+	    /* ce-am facut aici a fost sa iau fiecare directie in parte si sa le tratez pe bucatele
+	     * pentru ca baiatul care a facut codul nu a tratat deloc cazurile de la margine
+	     * Dupa o sa vezi verificarile sunt simetrice pentru fiecare directie, adica
+	     * mai intai verific ca vecinii sa existe, apoi daca nu exista primul iar la final daca nu exista cel de-al 2-lea 
+	    if (dirR <= 1 || dirR >7) {
+		if (condition(ee, i * nx, nx) && condition(ww, i * nx, nx)) {
+			if (G[c].r > G[ee].r && G[c].r > G[ww].r) {
+				nms[c].r = G[c].r;
+			}
+		} else if (!condition(ee, i * nx, nx) && (condition(ww, i * nx, nx) && G[c].r > G[ww].r)) {
+			nms[c].r = G[c].r;
+		} else if (!condition(ww, i * nx, nx) && (condition(ee, i * nx, nx) && G[c].r > G[ee].r)) {
+			nms[c].r = G[c].r;
+		} else {
+			nms[c].r = 0;
+		}
+	    } else if (dirR > 1 && dirR <= 3) {
+		if (condition(nw, (i-1) * nx, nx) && condition(se, (i+1) * nx, nx)) {
+			if (G[c].r > G[nw].r && G[c].r > G[se].r) {
+				nms[c].r = G[c].r;
+			}
+		} else if (!condition(nw, (i-1) * nx, nx) && (condition(se, (i+1) * nx, nx) && G[c].r > G[se].r)) {
+			nms[c].r = G[c].r;
+		} else if (!condition(se, (i+1) * nx, nx) && (condition(nw, (i-1) * nx, nx) && G[c].r > G[nw].r)) {
+			nms[c].r = G[c].r;
+		} else {
+			nms[c].r = 0;
+		}
+	    } else if (dirR > 3 && dirR <= 5) {
+		if (condition(nn, (i-1) * nx, nx) && condition(ss, (i+1) * nx, nx)) {
+			if (G[c].r > G[nn].r && G[c].r > G[ss].r) {
+				nms[c].r = G[c].r;
+			}
+		} else if (!condition(nn, (i-1) * nx, nx) && (condition(ss, (i+1) * nx, nx) && G[c].r > G[ss].r)) {
+			nms[c].r = G[c].r;
+		} else if (!condition(ss, (i+1) * nx, nx) && (condition(nn, (i-1) * nx, nx) && G[c].r > G[nn].r)) {
+			nms[c].r = G[c].r;
+		} else {
+			nms[c].r = 0;
+		}
+	    } else if (dirR > 5 && dirR <=7) {
+		if (condition(ne, (i-1) * nx, nx) && condition(sw, (i+1) * nx, nx)) {
+			if (G[c].r > G[ne].r && G[c].r > G[sw].r) {
+				nms[c].r = G[c].r;
+			}
+		} else if (!condition(ne, (i-1) * nx, nx) && (condition(sw, (i+1) * nx, nx) && G[c].r > G[sw].r)) {
+			nms[c].r = G[c].r;
+		} else if (!condition(sw, (i+1) * nx, nx) && (condition(ne, (i-1) * nx, nx) && G[c].r > G[ne].r)) {
+			nms[c].r = G[c].r;
+		} else {
+			nms[c].r = 0;
+		}
+	    }
+
+
             if (((dirR <= 1 || dirR > 7) && G[c].r > G[ee].r &&
                  G[c].r > G[ww].r) || // 0 deg
                 ((dir > 1 && dir <= 3) && G[c] > G[nw] &&
@@ -457,19 +681,19 @@ rgb_t *canny_edge_detection(const rgb_t *in,
                  G[c] > G[sw]))   // 135 deg
                 nms[c] = G[c];
             else
-                nms[c] = 0;
+                nms[c] = 0;*/
         }
  
     // Reuse array
     // used as a stack. nx*ny/2 elements should be enough.
     int *edges = (int*) after_Gy;
-    memset(out, 0, sizeof(pixel_t) * nx * ny);
-    memset(edges, 0, sizeof(pixel_t) * nx * ny);
+    memset(out, 0, sizeof(rgb_t) * bmp_ih->bmp_bytesz);
+    memset(edges, 0, sizeof(rgb_t) * nx * ny);
  
     // Tracing edges with hysteresis . Non-recursive implementation.
-    size_t c = 1;
-    for (int j = 1; j < ny - 1; j++)
-        for (int i = 1; i < nx - 1; i++) {
+    size_t c = 0;
+    for (int i = 0; j < ny; i++)
+        for (int j = 0; j < nx; j++) {
             if (nms[c] >= tmax && out[c] == 0) { // trace edges
                 out[c] = MAX_BRIGHTNESS;
                 int nedges = 1;
@@ -504,7 +728,7 @@ rgb_t *canny_edge_detection(const rgb_t *in,
     free(after_Gy);
     free(G);
     free(nms);
- */
+
     return out;
 }
  
