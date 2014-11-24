@@ -61,6 +61,33 @@ typedef struct {
 // Use short int instead `unsigned char' so that we can
 // store negative values.
 typedef short int pixel_t;
+
+double sRGB_to_linear(double x) {
+	if(x < 0.04045) return x/12.92;
+	return pow((x+0.055)/1.055, 2.4);
+}
+
+double GreyScaleValue(double R, double G, double B){
+	double grey_linear;
+	double R_linear, G_linear, B_linear;
+
+	R_linear = sRGB_to_linear(R/255.0);
+	G_linear = sRGB_to_linear(G/255.0);
+	B_linear = sRGB_to_linear(B/255.0);
+	grey_linear = 0.299 * R_linear + 0.587 * G_linear + 0.114 * B_linear;
+
+	return grey_linear;
+	
+}
+
+double linear_to_sRGB(double y){
+	if (y <= 0.0031308) return 12.92 * y;
+	return 1.055 * pow(y, 1/2.4) - 0.055;
+}
+
+double GreyColor(double grey_linear){
+	return round(linear_to_sRGB(grey_linear) * 255);
+}
  
 pixel_t *load_bmp(const char *filename,
                   bitmap_info_header_t *bitmapInfoHeader)
