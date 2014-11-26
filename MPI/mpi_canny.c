@@ -107,6 +107,7 @@ int main(int argc, char* argv[]) {
 		memcpy(in_bitmap_data, recv_buffer, sizeof(pixel_t) * chunck * width);
 	}
 
+	// Testing what I've done until now
 	if(rank == 1) {
 		int c = 0;
 		for (i = 0; i < chunck; i++) {
