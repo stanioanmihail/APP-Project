@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	MPI_Init(&argc, &argv); //Initialize MPI medium
 
-	int tasks, rank, resultlen, i;
+	int tasks, rank, resultlen, i, j;
 	char proc_name[MPI_MAX_PROCESSOR_NAME];
 	MPI_Status stat;
 
@@ -43,6 +43,12 @@ int main(int argc, char* argv[]) {
         		fprintf(stderr, "main: BMP image not loaded.\n");
         		return 1;
 		}
+		send_buffer = (char*)malloc(sizeof(char) * (ih.bmp_bytesz * sizeof(pixel_t)));
+		assert(send_buffer != NULL);
+
+		// Copy from in_bitmap_data to send_buffer
+		memcpy(send_buffer, in_bitmap_data, ih.bmp_bytesz * sizeof(pixel_t));
+
 		printf("[Master] number elements in_bitmap_data = %d\n", sizeof(in_bitmap_data));
 		int send[2];
 
@@ -78,13 +84,38 @@ int main(int argc, char* argv[]) {
 
 	//Allocate memory for input image
 	if (rank == tasks - 1) { // Caution for last thread because it maight have a bigger chunck
-		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * (chunck + reminder));
+		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * (chunck + reminder) * width );
 		assert(in_bitmap_data != NULL);
+		recv_buffer = (char*)malloc(sizeof(char) * (width *  (chunck + reminder) * sizeof(pixel_t)));
+		assert(recv_buffer != NULL);
 	} else if(rank != 0) { // Remaining processes, other than MASTER
-		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * chunck);
+		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * chunck * width);
 		assert(in_bitmap_data != NULL);
+		recv_buffer = (char*)malloc(sizeof(char) * (chunck * width * sizeof(pixel_t)));
+		assert(recv_buffer != NULL);
+	} else { // Master
+		recv_buffer = (char*)malloc(sizeof(char) * (chunck * width * sizeof(pixel_t)));
+		assert(recv_buffer != NULL);
 	}
 
+	MPI_Scatter(send_buffer, sizeof(pixel_t) * chunck * width, MPI_CHAR, 
+		    recv_buffer, sizeof(pixel_t) * chunck * width, MPI_CHAR, 
+		    0, MPI_COMM_WORLD);
+
+	// Copy back from recv_buffer to in_bitmap_data
+	if (rank != 0) {
+		memcpy(in_bitmap_data, recv_buffer, sizeof(pixel_t) * chunck * width);
+	}
+
+	if(rank == 1) {
+		int c = 0;
+		for (i = 0; i < chunck; i++) {
+			for (j = 0; j < width; j++) {
+				printf("%.2X ", in_bitmap_data[c++]);
+			}
+			printf("\n");
+		}
+	}
 
 	MPI_Finalize();
 	return 0;
