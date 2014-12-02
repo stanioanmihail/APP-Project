@@ -102,11 +102,25 @@ int main(int argc, char* argv[]) {
 		    recv_buffer, sizeof(pixel_t) * chunck * width, MPI_CHAR, 
 		    0, MPI_COMM_WORLD);
 
+	if(reminder != 0){
+		if(rank == 0){
+			//send last chunk
+		    printf("%d \n", chunck * tasks);
+            	    rc = MPI_Send(in_bitmap_data + tasks * chunck, 
+				sizeof(pixel_t) * reminder * width, MPI_CHAR,
+                    		0, 1, MPI_COMM_WORLD);
+		}else if(rank == tasks - 1){
+			//recv last chunk
+            	    rc = MPI_Recv(recv_buffer + sizeof(pixel_t) * chunck * width,
+				 sizeof(pixel_t) * reminder * width, MPI_CHAR, 0,
+                        	1, MPI_COMM_WORLD, &stat);
+		}
+	}
 	// Copy back from recv_buffer to in_bitmap_data
 	if (rank != 0) {
 		memcpy(in_bitmap_data, recv_buffer, sizeof(pixel_t) * chunck * width);
 	}
-
+	/*
 	// Testing what I've done until now
 	if(rank == 1) {
 		int c = 0;
@@ -117,7 +131,7 @@ int main(int argc, char* argv[]) {
 			printf("\n");
 		}
 	}
-
+	*/
 	MPI_Finalize();
 	return 0;
 }

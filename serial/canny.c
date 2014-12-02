@@ -237,11 +237,12 @@ pixel_t *load_bmp(const char *filename,
     }
  
     // read in the bitmap image data
-    size_t pad, pad1, count=0;
+    //size_t pad;
+    size_t pad1, count=0;
     //unsigned char c;
     unsigned char c[3];
     
-    pad = 4*ceil(bitmapInfoHeader->bitspp*bitmapInfoHeader->width/32.) - bitmapInfoHeader->width;
+    //pad = 4*ceil(bitmapInfoHeader->bitspp*bitmapInfoHeader->width/32.) - bitmapInfoHeader->width;
     pad1 = 4*floor((bitmapInfoHeader->bitspp*bitmapInfoHeader->width+31)/32) - (bitmapInfoHeader->width * 3);
     for(size_t i=0; i<bitmapInfoHeader->height; i++){
 	    for(size_t j=0; j<bitmapInfoHeader->width; j++){
@@ -379,9 +380,10 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
     // fwrite(data, 1, bmp_ih->bmp_bytesz, filePtr);
  
     // Padding: http://en.wikipedia.org/wiki/BMP_file_format#Pixel_storage
-    size_t pad = 4*ceil(bmp_ih->bitspp*bmp_ih->width/32.) - bmp_ih->width;
+    //size_t pad = 4*ceil(bmp_ih->bitspp*bmp_ih->width/32.) - bmp_ih->width;
     size_t pad1 = 4*floor((bmp_ih->bitspp*bmp_ih->width+31)/32) - (bmp_ih->width * 3);
     unsigned char c[3];
+
     for(size_t i=0; i < bmp_ih->height; i++) {
 	    for(size_t j=0; j < bmp_ih->width; j++) {
 		    c[0] = (unsigned char) data[j + bmp_ih->width*i];
