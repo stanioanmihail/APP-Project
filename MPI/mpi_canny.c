@@ -47,7 +47,10 @@ int main(int argc, char* argv[]) {
 		assert(send_buffer != NULL);
 
 		// Copy from in_bitmap_data to send_buffer
+		printf("[master]%d \n", ih.bmp_bytesz);
+		printf("[master]%d %d %d\n", ih.width, ih.height, ih.width * ih.height);
 		memcpy(send_buffer, in_bitmap_data, ih.bmp_bytesz * sizeof(pixel_t));
+		printf("[master] %d\n", ih.bmp_bytesz * sizeof(pixel_t));
 
 		printf("[Master] number elements in_bitmap_data = %d\n", sizeof(in_bitmap_data));
 		int send[2];
@@ -86,6 +89,7 @@ int main(int argc, char* argv[]) {
 	if (rank == tasks - 1) { // Caution for last thread because it maight have a bigger chunck
 		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * (chunck + reminder) * width );
 		assert(in_bitmap_data != NULL);
+		printf("[last_task] %d\n", (width *  (chunck + reminder)));
 		recv_buffer = (char*)malloc(sizeof(char) * (width *  (chunck + reminder) * sizeof(pixel_t)));
 		assert(recv_buffer != NULL);
 	} else if(rank != 0) { // Remaining processes, other than MASTER
@@ -105,15 +109,20 @@ int main(int argc, char* argv[]) {
 	if(reminder != 0){
 		if(rank == 0){
 			//send last chunk
-		    printf("%d \n", chunck * tasks);
-            	    rc = MPI_Send(in_bitmap_data + tasks * chunck, 
+		    printf("%d \n", chunck * tasks * width * sizeof(pixel_t));
+		    printf("reminder = %d, width = %d, reminder*width=%d\n", reminder, width, reminder*width);
+            MPI_Send(send_buffer + tasks * chunck * width * sizeof(pixel_t), 
 				sizeof(pixel_t) * reminder * width, MPI_CHAR,
                     		0, 1, MPI_COMM_WORLD);
+            printf("passed\n");
 		}else if(rank == tasks - 1){
 			//recv last chunk
-            	    rc = MPI_Recv(recv_buffer + sizeof(pixel_t) * chunck * width,
+			printf("%d %d %d\n", chunck, width, chunck * width);
+			printf("reminder = %d, width = %d, reminder*width=%d\n", reminder, width, reminder*width);
+            MPI_Recv(recv_buffer + sizeof(pixel_t) * chunck * width,
 				 sizeof(pixel_t) * reminder * width, MPI_CHAR, 0,
                         	1, MPI_COMM_WORLD, &stat);
+            printf("last task after recv\n");
 		}
 	}
 	// Copy back from recv_buffer to in_bitmap_data
