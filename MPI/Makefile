@@ -1,12 +1,12 @@
-GCC = gcc
+GCC = mpicc
 CCFLAGS = -Wall -lm
-SOURCE = canny.c
-TARGET = canny
+SOURCE = mpi_canny.c
+TARGET = mpi_canny
 
-build: canny.o file_io.o
+build: mpi_canny.o file_io.o
 	$(GCC) --std=c99 -g $^ -o $(TARGET) $(CCFLAGS)
 
-canny.o: canny.c
+mpi_canny.o: mpi_canny.c
 	$(GCC) --std=c99 -g -c $(SOURCE) $(CCFLAGS)
 
 file_io.o: file_io.c
