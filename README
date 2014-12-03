@@ -16,3 +16,12 @@ enough
 * parallel schematic 
 * photo trasholds - particular situations, signifiant speedup
 
+
+SESSION 3:
+
+To Do:
+* MPI:
+- out in convolution = chunk size
+- kernel declared locally
+- backup plan : workers will do all the convolution tasks - the last part of algh will be MASTER concern  
+

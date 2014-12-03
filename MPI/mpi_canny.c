@@ -26,15 +26,14 @@ int main(int argc, char* argv[]) {
 	MPI_Status stat;
 
 	MPI_Comm_size(MPI_COMM_WORLD, & tasks);
-
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
 	MPI_Get_processor_name(proc_name, &resultlen);
 
 	//printf("This is thread[%d] from processor %s \n", rank, proc_name);
 
 	bitmap_info_header_t ih; 
 	pixel_t* in_bitmap_data;
+	pixel_t* out_bitmap_data;
 	char* send_buffer; // Use for sending data
 	char* recv_buffer; // Use for receiving data
 	int width, height; 
@@ -79,6 +78,7 @@ int main(int argc, char* argv[]) {
 		width = recv[0];
 		height = recv[1];
 		printf("Thread[%d] received width = %d and height = %d\n", rank, width, height);
+		in_bitmap_data = (pixel_t *) malloc(sizeof(pixel_t) * width * height * 3);
 
 		
 	}
@@ -92,70 +92,15 @@ int main(int argc, char* argv[]) {
 		stop += reminder;
 	}
 
+	
 	printf("Thread[%d] has start = %d and stop = %d\n", rank, start, stop);
+	MPI_Bcast(&ih, sizeof(bitmap_info_header_t), MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_Bcast(in_bitmap_data, sizeof(pixel_t) * width * height * 3, MPI_CHAR, 0, MPI_COMM_WORLD);	
+	char file[255];
+	sprintf(file, "mpi_out_%d.bmp", rank);
+    	save_bmp(file, &ih, in_bitmap_data); 
 
-	//Allocate memory for input image
-	if (rank == tasks - 1) { // Caution for last thread because it maight have a bigger chunck
-		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * (chunck + reminder) * width * 3);
-		assert(in_bitmap_data != NULL);
-
-		printf("[last_task]total size = %d\n", (width *  (chunck + reminder) *3 * sizeof(pixel_t)));
-		
-		recv_buffer = (char*)malloc(sizeof(char) * (width *  (chunck + reminder) * sizeof(pixel_t) * 3));
-		assert(recv_buffer != NULL);
-	} else if(rank != 0) { // Remaining processes, other than MASTER
-		in_bitmap_data = (pixel_t*)malloc(sizeof(pixel_t) * chunck * width * 3);
-		assert(in_bitmap_data != NULL);
-		recv_buffer = (char*)malloc(sizeof(char) * (chunck * width * sizeof(pixel_t) * 3));
-		assert(recv_buffer != NULL);
-	} else { // Master
-		recv_buffer = (char*)malloc(sizeof(char) * (chunck * width * sizeof(pixel_t) * 3));
-		assert(recv_buffer != NULL);
-	}
-
-	MPI_Scatter(send_buffer, sizeof(pixel_t) * chunck * width * 3, MPI_CHAR, 
-		   	    recv_buffer, sizeof(pixel_t) * chunck * width * 3, MPI_CHAR, 
-		    	0, MPI_COMM_WORLD);
-
-	if(reminder != 0){
-		if(rank == 0){
-			//send last chunk
-		    printf("[master]start point=%d\n", chunck * tasks * width * sizeof(pixel_t) * 3);
-		    printf("[master]reminder chunck=%d\n", reminder*width*sizeof(pixel_t)*3);
-
-            MPI_Send(send_buffer + tasks * chunck * width * sizeof(pixel_t) * 3, 
-					 sizeof(pixel_t) * reminder * width * 3, MPI_CHAR,
-                     tasks-1, 0, MPI_COMM_WORLD);
-            printf("[master] passed\n");
-		}else if(rank == tasks - 1){
-			//recv last chunk
-			printf("[last_task]start point=%d\n", chunck * width * 3 * sizeof(pixel_t));
-			printf("[last_task]reminder chunck=%d\n", reminder * width * 3 * sizeof(pixel_t));
-
-            MPI_Recv(recv_buffer + sizeof(pixel_t) * chunck * width * 3, 
-            		 sizeof(pixel_t) * reminder * width * 3, MPI_CHAR, 
-            		 0, 0, MPI_COMM_WORLD, &stat);
-            printf("last task after recv\n");
-		}
-	}
-	// Copy back from recv_buffer to in_bitmap_data
-	if (rank != 0 && rank != tasks-1) {
-		memcpy(in_bitmap_data, recv_buffer, sizeof(pixel_t) * chunck * width * 3);
-	} else if (rank == tasks-1) {
-		memcpy(in_bitmap_data, recv_buffer, sizeof(pixel_t) * (chunck+reminder) * width * 3);
-	}
-	/*
-	// Testing what I've done until now
-	if(rank == 1) {
-		int c = 0;
-		for (i = 0; i < chunck; i++) {
-			for (j = 0; j < width; j++) {
-				printf("%.2X ", in_bitmap_data[c++]);
-			}
-			printf("\n");
-		}
-	}
-	*/
+	
 	MPI_Finalize();
 	return 0;
 }
