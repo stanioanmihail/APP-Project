@@ -73,16 +73,16 @@ double sRGB_to_linear(double x) {
 	return pow((x+0.055)/1.055, 2.4);
 }
 
-double GreyScaleValue(double R, double G, double B){
-	double grey_linear;
+double GrayScaleValue(double R, double G, double B){
+	double gray_linear;
 	double R_linear, G_linear, B_linear;
 
 	R_linear = sRGB_to_linear(R/255.0);
 	G_linear = sRGB_to_linear(G/255.0);
 	B_linear = sRGB_to_linear(B/255.0);
-	grey_linear = 0.299 * R_linear + 0.587 * G_linear + 0.114 * B_linear;
+	gray_linear = 0.299 * R_linear + 0.587 * G_linear + 0.114 * B_linear;
 
-	return grey_linear;
+	return gray_linear;
 	
 }
 
@@ -91,8 +91,18 @@ double linear_to_sRGB(double y){
 	return 1.055 * pow(y, 1/2.4) - 0.055;
 }
 
-double GreyColor(double grey_linear){
-	return round(linear_to_sRGB(grey_linear) * 255);
+double GrayColor(double gray_linear){
+	return round(linear_to_sRGB(gray_linear) * 255);
+}
+
+int convert_pixel_to_grayscale(int R, int G, int B){
+	
+	double gray_linear;
+	double gray_color;
+	gray_linear = GrayScaleValue((double) R, (double) G, (double) B);  
+	gray_color = GrayColor(gray_linear);
+
+	return (int) gray_color;
 }
  
 pixel_t *load_bmp_old(const char *filename,
@@ -250,7 +260,7 @@ pixel_t *load_bmp(const char *filename,
 			    fclose(filePtr);
 			    return NULL;
 		    }
-		    bitmapImage[count++] = (short int) (1000 * GreyScaleValue(c[0], c[1], c[2]));
+		    bitmapImage[count++] = (short int) (convert_pixel_to_grayscale(c[2], c[1], c[0]));
 	    }
 	    fseek(filePtr, pad1, SEEK_CUR);
     }
