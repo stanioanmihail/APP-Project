@@ -13,4 +13,4 @@ file_io.o: file_io.c
 	$(GCC) --std=c99 -g -c $^ $(CCFLAGS)
 
 clean:
-	rm -rf *~ *.o out.bmp $(TARGET)
+	rm -rf *~ *.o *.bmp $(TARGET)
