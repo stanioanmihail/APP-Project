@@ -127,10 +127,10 @@ pixel_t *load_bmp(const char *filename,
         }
         fseek(filePtr, pad1, SEEK_CUR);
     }
-    printf("Total bmp_bytesz=%d from header\n",bitmapInfoHeader->bmp_bytesz);
-    printf("Total allocation=%d from header\n",bitmapInfoHeader->bmp_bytesz * sizeof(pixel_t));
-    printf("Total bytesz=%d width*height=%d dcount=%d\n", bitmapInfoHeader->height * bitmapInfoHeader->width * 3, 
-        bitmapInfoHeader->height * bitmapInfoHeader->width, count);
+    // printf("Total bmp_bytesz=%d from header\n",bitmapInfoHeader->bmp_bytesz);
+    // printf("Total allocation=%d from header\n",bitmapInfoHeader->bmp_bytesz * sizeof(pixel_t));
+    // printf("Total bytesz=%d width*height=%d dcount=%d\n", bitmapInfoHeader->height * bitmapInfoHeader->width * 3, 
+    //     bitmapInfoHeader->height * bitmapInfoHeader->width, count);
  
     // If we were using unsigned char as pixel_t, then:
     // fread(bitmapImage, 1, bitmapInfoHeader->bmp_bytesz, filePtr);
