@@ -35,18 +35,18 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
     MPI_Comm_size(MPI_COMM_WORLD, &tasks);
     
     printf("Thread[%d] has width=%d and height=%d\n", rank, nx, ny);
+
     if (rank == 0) {
     	start = khalf;
-    	stop  = ny;
+    	stop  = ny - 4 ;
     } else if (rank == tasks - 1) {
-    	start = 0;
+    	start = 4;
     	stop  = ny - khalf;
     } else {
-    	start = 0;
-    	stop  = ny;
+    	start = 4;
+    	stop  = ny - 4;
     }
  
-    int counter = 0;
     if (normalize)
         for (int m = khalf; m < nx - khalf; m++)
             for (int n = start; n < stop; n++) {
@@ -62,8 +62,9 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
                 if (pixel > max)
                     max = pixel;
                 }
- int once = 1;
-    printf("Thread[%d] has start=%d and stop=%d \n", rank, start, stop);
+
+    // printf("Thread[%d] has start=%d and stop=%d \n", rank, start, stop);
+
     for (int m = khalf; m < nx - khalf; m++)
         for (int n = start; n < stop; n++) {
 
@@ -78,16 +79,6 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
             if (normalize)
                 pixel = MAX_BRIGHTNESS * (pixel - min) / (max - min);
             out[n * nx + m] = (pixel_t)pixel;
-            
-            if (rank == 0) {
-                // printf("Index is = %d \n", n * nx + m);
-                if (once==1) {
-                    printf("Nr. elements= %d \n", sizeof(out)/sizeof(pixel_t));
-                    printf("sizeof(out)=%d\n", sizeof(out));
-                    once = 0;
-                }
-                printf("index_height = %d, width = %d, index_width = %d \n", n, nx, m);
-            }
         }
 }
 
@@ -124,16 +115,6 @@ void gaussian_filter(const pixel_t *in, pixel_t *out,
             c++;
         }
  
-
-    // if (rank == 0) {
-    //     for (int i = 0; i < c; i++) {
-    //         if (i % n == 0) {
-    //             printf("\n");
-    //         }
-    //         printf("%f ", kernel[i]);
-    //     }
-    // }
-
     convolution(in, out, kernel, nx, ny, rank, n, true);
 }
 
@@ -154,7 +135,7 @@ pixel_t* canny_edge_detection(const pixel_t* in,
     assert(after_Gx != NULL);
     pixel_t* out = (pixel_t*)calloc((bmp_ih->bmp_bytesz/3), sizeof(pixel_t));
     assert(out != NULL);
-    pixel_t* local_out = (pixel_t*)malloc(width * height * sizeof(pixel_t));
+    pixel_t* local_out = (pixel_t*)calloc(width * height, sizeof(pixel_t));
     if (rank == 0) {
         printf("allocation = %d \n", width * height * sizeof(pixel_t));
         printf("sizeof(local_out) = %d \n", sizeof(local_out));
@@ -242,31 +223,31 @@ int main(int argc, char* argv[]) {
 
 	pixel_t* local_bitmap_data = NULL;
 	if (rank == 0) {
-    	local_bitmap_data = (pixel_t*)calloc((chunck + 2) * width, sizeof(pixel_t));
-    } else if (rank != 0 && rank != tasks - 1) {
     	local_bitmap_data = (pixel_t*)calloc((chunck + 4) * width, sizeof(pixel_t));
+    } else if (rank != 0 && rank != tasks - 1) {
+    	local_bitmap_data = (pixel_t*)calloc((chunck + 8) * width, sizeof(pixel_t));
     } else {
-    	local_bitmap_data = (pixel_t*)calloc((chunck + 2) * width, sizeof(pixel_t));
+    	local_bitmap_data = (pixel_t*)calloc((chunck + 4) * width, sizeof(pixel_t));
     }
     assert(local_bitmap_data != NULL);
 
     if (rank == 0) {
-    	memcpy(local_bitmap_data, &in_bitmap_data[start*width], sizeof(pixel_t) * (chunck + 2) * width); // Extra 2 rows at the end
+    	memcpy(local_bitmap_data, &in_bitmap_data[start*width], sizeof(pixel_t) * (chunck + 4) * width); // Extra 2 rows at the end
     } else if (rank != 0 && rank != tasks - 1) {
-    	memcpy(local_bitmap_data, &in_bitmap_data[(start-2)*width], 
-    		   sizeof(pixel_t) * (chunck + 4) * width); // Extra 4 rows(2 up, 2 at the end)
+    	memcpy(local_bitmap_data, &in_bitmap_data[(start-4)*width], 
+    		   sizeof(pixel_t) * (chunck + 8) * width); // Extra 4 rows(2 up, 2 at the end)
     } else {
-    	memcpy(local_bitmap_data, &in_bitmap_data[(start-2)*width], 
-    		   sizeof(pixel_t) * (chunck+2) * width); // Extra 2 rows up
+    	memcpy(local_bitmap_data, &in_bitmap_data[(start-4)*width], 
+    		   sizeof(pixel_t) * (chunck+4) * width); // Extra 2 rows up
     }
 
 	// save_bmp(file, &ih, local_bitmap_data);
 	if (rank == 0) {
-    	out_bitmap_data = canny_edge_detection(local_bitmap_data, &ih, width, chunck + 2, rank, 0.3f);
+    	out_bitmap_data = canny_edge_detection(local_bitmap_data, &ih, width, chunck + 4, rank, 1.0f);
     } else if(rank != 0 && rank != tasks - 1) {
-    	out_bitmap_data = canny_edge_detection(local_bitmap_data, &ih, width, chunck + 4, rank, 0.3f);
+    	out_bitmap_data = canny_edge_detection(local_bitmap_data, &ih, width, chunck + 8, rank, 1.0f);
     } else {
-    	out_bitmap_data = canny_edge_detection(local_bitmap_data, &ih, width, chunck + 2, rank, 0.3f);
+    	out_bitmap_data = canny_edge_detection(local_bitmap_data, &ih, width, chunck + 4, rank, 1.0f);
     }
 
     assert(out_bitmap_data != NULL);
