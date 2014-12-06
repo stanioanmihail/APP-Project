@@ -12,5 +12,7 @@ mpi_canny.o: mpi_canny.c
 file_io.o: file_io.c
 	$(GCC) --std=c99 -g -c $^ $(CCFLAGS)
 
+run:
+	mpirun -n 4 ./$(TARGET) $1
 clean:
-	rm -rf *~ *.o out.bmp $(TARGET)
+	rm -rf *~ *.o *.bmp $(TARGET)
