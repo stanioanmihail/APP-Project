@@ -77,38 +77,6 @@ int main(int argc, char* argv[]) {
         height = ih.height;
 	}
 
-	// 	// Copy from in_bitmap_data to send_buffer
-	// 	if (_DEBUG) {
-	// 		printf("[master]%d \n", ih.bmp_bytesz);
-	// 		printf("[master]%d %d %d\n", ih.width, ih.height, ih.width * ih.height);
-	// 		printf("[master] %d\n", ih.bmp_bytesz * sizeof(pixel_t));
-	// 	}
-
-	// 	int send[2];
-
-	// 	send[0] = width  = ih.width;
-	// 	send[1] = height = ih.height;
-
-	// 	if (_DEBUG) {
-	// 		printf("[Master] sending width = %d and height = %d \n", width, height );
-	// 	}
-
-	// 	for (i = 1; i < tasks; i++) {
-	// 		MPI_Send(&send[0], 2, MPI_INT, i, 0, MPI_COMM_WORLD);
-	// 	}
-
- //    	} else {
-	// 	int recv[2];
-
-	// 	MPI_Recv(&recv, 2, MPI_INT, 0, 0, MPI_COMM_WORLD, &stat);
-	// 	width = recv[0];
-	// 	height = recv[1];
-	// 	printf("Thread[%d] received width = %d and height = %d\n", rank, width, height);
-	// 	in_bitmap_data = (pixel_t *) malloc(sizeof(pixel_t) * width * height * 3);
-
-		
-	// }
-
 	// Sending width and height
 	MPI_Bcast(&width, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&height, 1, MPI_INT, 0, MPI_COMM_WORLD);
