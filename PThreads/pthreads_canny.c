@@ -156,22 +156,19 @@ pixel_t* canny_edge_detection(const pixel_t* in,
 	const int nx = width;
 	const int ny = height;
 
-	pixel_t* after_Gx = calloc((width * height), sizeof(pixel_t));
+	pixel_t* after_Gx = calloc((width * (height+2)), sizeof(pixel_t));
 	assert(after_Gx != NULL);
 
-	pixel_t* after_Gy = calloc((width * height), sizeof(pixel_t));
+	pixel_t* after_Gy = calloc((width * (height+2)), sizeof(pixel_t));
 	assert(after_Gy != NULL);
 
-	pixel_t* out = (pixel_t*)calloc((bmp_ih->bmp_bytesz/3), sizeof(pixel_t));
-	assert(out != NULL);
-
-	pixel_t* local_out = (pixel_t*)calloc(width * height, sizeof(pixel_t));
+	pixel_t* local_out = (pixel_t*)calloc(width * (height+2), sizeof(pixel_t));
 	assert(local_out != NULL);
 
-	pixel_t *nms = calloc(nx * ny * sizeof(pixel_t), 1);
+	pixel_t *nms = calloc(nx * (ny+2) * sizeof(pixel_t), 1);
 	assert(nms != NULL);
 
-	pixel_t *G = calloc(nx * ny * sizeof(pixel_t), 1);
+	pixel_t *G = calloc(nx * (ny+2) * sizeof(pixel_t), 1);
 	assert(G != NULL);
 
 	gaussian_filter(in, local_out, nx, ny, tid, sigma);
@@ -302,16 +299,20 @@ void* run(void* arg) {
 	}
 
 	if (currentArgs->tid == 0) {
-		local_bitmap_data = (pixel_t*)calloc((chunck + 4) * 
+		local_bitmap_data = (pixel_t*)calloc((chunck + 4 + 2) * 
 									currentArgs->width, sizeof(pixel_t));
 	} else if (currentArgs->tid != 0 && currentArgs->tid != num_threads - 1) {
-		local_bitmap_data = (pixel_t*)calloc((chunck + 8) * 
+		local_bitmap_data = (pixel_t*)calloc((chunck + 8 + 2) * 
 									currentArgs->width, sizeof(pixel_t));
 	} else {
-		local_bitmap_data = (pixel_t*)calloc((chunck + 4) * 
+		local_bitmap_data = (pixel_t*)calloc((chunck + 4 + 2) * 
 									currentArgs->width, sizeof(pixel_t));
 	}
 	assert(local_bitmap_data != NULL); // Def check
+
+	if (_DEBUG) {
+		printf("Thread[%d] done allocating memory \n", currentArgs->tid);
+	}
 
 	if (currentArgs->tid == 0) {
 		rc = memcpy(local_bitmap_data, &currentArgs->in_bitmap_data[start*currentArgs->width],
@@ -325,6 +326,10 @@ void* run(void* arg) {
 	}
 	assert(rc != NULL && rc == local_bitmap_data); // Sanity check!!!!
 
+	if (_DEBUG) {
+		printf("Thread[%d] done copying \n", currentArgs->tid);
+	}
+
 	if (currentArgs->tid == 0) {
 		out_bitmap_data = canny_edge_detection(local_bitmap_data, currentArgs->ih,
 			currentArgs->width, chunck + 4, currentArgs->tid, 40, 50, 1.0f);
@@ -337,6 +342,10 @@ void* run(void* arg) {
 	}
 	assert(out_bitmap_data != NULL);
 
+	if (_DEBUG) {
+		printf("Thread[%d] done algorithm \n", currentArgs->tid);
+	}
+
 	pthread_mutex_lock(&mux);
 	if (currentArgs->tid == 0) {
 		memcpy(&currentArgs->out[0], &out_bitmap_data[0], chunck * currentArgs->width * sizeof(pixel_t));
@@ -344,13 +353,17 @@ void* run(void* arg) {
 		memcpy(&currentArgs->out[chunck * currentArgs->tid * currentArgs->width],
 				&out_bitmap_data[4*currentArgs->width], chunck * currentArgs->width * sizeof(pixel_t));
 	} else {
-		memcpy(&currentArgs->out[chunck * currentArgs->tid * currentArgs->width], 
-				&out_bitmap_data[4*currentArgs->width], (chunck + reminder) * currentArgs->width * sizeof(pixel_t));
+		memcpy(&currentArgs->out[(chunck-reminder) * currentArgs->tid * currentArgs->width], 
+				&out_bitmap_data[4*currentArgs->width], chunck * currentArgs->width * sizeof(pixel_t));
 	}
 	pthread_mutex_unlock(&mux);
 
-	// free(local_bitmap_data);
-	// free(out_bitmap_data);
+	if (_DEBUG) {
+		printf("Thread[%d] done making final \n", currentArgs->tid);
+	}
+
+	free(local_bitmap_data);
+	free(out_bitmap_data);
 
 	pthread_exit(NULL);
 }
@@ -407,14 +420,12 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 	}
 
-	free(in_bitmap_data);
-
 	char file[255];
 	sprintf(file, "mpi_out.bmp");
 	save_bmp(file, &ih, out);
 
-	
-	// free(out);
+	free(in_bitmap_data);
+	free(out);
 
 	return 0;
 
