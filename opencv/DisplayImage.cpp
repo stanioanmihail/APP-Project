@@ -76,19 +76,18 @@ int main( int argc, char** argv )
   cvtColor( src, src_gray, CV_BGR2GRAY );
 
   /// Create a window
-  namedWindow( window_name, CV_WINDOW_AUTOSIZE );
+  //namedWindow( window_name, CV_WINDOW_AUTOSIZE );
 
   /// Create a Trackbar for user to enter threshold
-  createTrackbar( "Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold );
+  //createTrackbar( "Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold );
 
   /// Show the image
   CannyThreshold(0, 0);
 
+  imwrite(argv[2], dest_gray);
+
   /// Wait until user exit program by pressing a key
-  waitKey(0);
-
-  imwrite("opencv_out.bmp", dest_gray);
-
+  //waitKey(0);
 
   return 0;
   }
