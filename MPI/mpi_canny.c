@@ -149,7 +149,7 @@ pixel_t* canny_edge_detection(const pixel_t* in,
 	pixel_t* after_Gy = calloc((width * (height + 2)), sizeof(pixel_t));
 	assert(after_Gy != NULL);
 
-	pixel_t* local_out = (pixel_t*)calloc(width * (height + 2)), sizeof(pixel_t));
+	pixel_t* local_out = (pixel_t*)calloc(width * (height + 2), sizeof(pixel_t));
 	assert(local_out != NULL);
 
 	pixel_t *nms = calloc(nx * (ny + 2) * sizeof(pixel_t), 1);
