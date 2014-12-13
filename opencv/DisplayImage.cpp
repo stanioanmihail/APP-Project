@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 using namespace cv;
 
 /// Global variables
@@ -65,6 +66,7 @@ int main( int argc, char** argv )
 {
   /// Load an image
   src = imread( argv[1] );
+  lowThreshold = atoi(argv[3]); 
 
   if( !src.data )
   { return -1; }

@@ -39,14 +39,17 @@ int main( int argc, char** argv )
     for (int j = 0; j < cols; j++) {
 
       if (src_ref.at<cv::Vec3b>(i,j)[0] !=  src_comp.at<cv::Vec3b>(i,j)[0]) {
+	//printf("[%d][%d] Ref %d != Comp %d \n",i, j, src_ref.at<cv::Vec3b>(i,j)[0], src_comp.at<cv::Vec3b>(i,j)[0]);
         diff_pixels += 1.0F;
       }
 
       if (src_ref.at<cv::Vec3b>(i,j)[1] !=  src_comp.at<cv::Vec3b>(i,j)[1]) {
+	//printf("[%d][%d] Ref %d != Comp %d \n",i, j, src_ref.at<cv::Vec3b>(i,j)[1], src_comp.at<cv::Vec3b>(i,j)[1]);
         diff_pixels += 1.0F;
       }
 
       if (src_ref.at<cv::Vec3b>(i,j)[2] !=  src_comp.at<cv::Vec3b>(i,j)[2]) {
+	//printf("[%d][%d] Ref %d != Comp %d \n",i, j, src_ref.at<cv::Vec3b>(i,j)[2], src_comp.at<cv::Vec3b>(i,j)[2]);
         diff_pixels += 1.0F;
       }
     }

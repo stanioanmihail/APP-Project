@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #set -x
+THOLD=40
 
 rm -f out.bmp pthreads_out.bmp mpi_out.bmp
 if ! test -d refs; then
@@ -10,7 +11,7 @@ fi
 make clean &> /dev/null && make &> /dev/null
 
 for image in $(ls ../images); do
-	./DisplayImage "../images/$image" "./refs/opencv_$image" &> /dev/null
+	./DisplayImage "../images/$image" "./refs/opencv_$image" $THOLD &> /dev/null
 done
 
 echo "***************Serial Test*********************"
