@@ -3,4 +3,4 @@ CMakeCache.txt
 cmake_install.cmake
 *.bmp
 Makefile
-
+build/*
