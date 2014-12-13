@@ -376,6 +376,11 @@ int main(int argc, char* argv[]) {
 	pixel_t* out = NULL;
 	bitmap_info_header_t ih;
 
+	if (argc != 3) {
+		perror("Wrong arguments: call with ./<exec> <filename> <num_threads");
+		exit(-1);
+	}
+
 	num_threads = atoi(argv[2]);
 	pthread_t threads[num_threads];
 	threadArgs arguments[num_threads];
@@ -421,7 +426,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	char file[255];
-	sprintf(file, "mpi_out.bmp");
+	sprintf(file, "pthreads_out.bmp");
 	save_bmp(file, &ih, out);
 
 	free(in_bitmap_data);
