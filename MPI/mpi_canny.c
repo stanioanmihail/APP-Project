@@ -143,17 +143,19 @@ pixel_t* canny_edge_detection(const pixel_t* in,
 	const int nx = width;
 	const int ny = height;
 
-	pixel_t* after_Gx = calloc((width * height), sizeof(pixel_t));
+	pixel_t* after_Gx = calloc((width * (height + 2)), sizeof(pixel_t));
 	assert(after_Gx != NULL);
-	pixel_t* after_Gy = calloc((width * height), sizeof(pixel_t));
+
+	pixel_t* after_Gy = calloc((width * (height + 2)), sizeof(pixel_t));
 	assert(after_Gy != NULL);
-	pixel_t* out = (pixel_t*)calloc((bmp_ih->bmp_bytesz/3), sizeof(pixel_t));
-	assert(out != NULL);
-	pixel_t* local_out = (pixel_t*)calloc(width * height, sizeof(pixel_t));
+
+	pixel_t* local_out = (pixel_t*)calloc(width * (height + 2)), sizeof(pixel_t));
 	assert(local_out != NULL);
-	pixel_t *nms = calloc(nx * ny * sizeof(pixel_t), 1);
+
+	pixel_t *nms = calloc(nx * (ny + 2) * sizeof(pixel_t), 1);
 	assert(nms != NULL);
-	pixel_t *G = calloc(nx * ny * sizeof(pixel_t), 1);
+
+	pixel_t *G = calloc(nx * (ny + 2) * sizeof(pixel_t), 1);
 	assert(G != NULL);
 
 	gaussian_filter(in, local_out, nx, ny, rank, sigma);
@@ -164,7 +166,6 @@ pixel_t* canny_edge_detection(const pixel_t* in,
 		-1, 0, 1};
 
 	convolution(local_out, after_Gx, Gx, nx, ny, rank, 3, false);
-	//memcpy(out, local_out, width * height * sizeof(pixel_t));
 
 	const float Gy[] = { 1, 2, 1,
 		0, 0, 0,
@@ -254,7 +255,6 @@ pixel_t* canny_edge_detection(const pixel_t* in,
 	free(G);
 	free(nms);
 
-	//memcpy(out, local_out, width * height * sizeof(pixel_t));
 	return local_out;
 }
 
@@ -317,11 +317,11 @@ int main(int argc, char* argv[]) {
 
 	pixel_t* local_bitmap_data = NULL;
 	if (rank == 0) {
-		local_bitmap_data = (pixel_t*)calloc((chunck + 4) * width, sizeof(pixel_t));
+		local_bitmap_data = (pixel_t*)calloc((chunck + 4 + 2) * width, sizeof(pixel_t));
 	} else if (rank != 0 && rank != tasks - 1) {
-		local_bitmap_data = (pixel_t*)calloc((chunck + 8) * width, sizeof(pixel_t));
+		local_bitmap_data = (pixel_t*)calloc((chunck + 8 + 2) * width, sizeof(pixel_t));
 	} else {
-		local_bitmap_data = (pixel_t*)calloc((chunck + 4) * width, sizeof(pixel_t));
+		local_bitmap_data = (pixel_t*)calloc((chunck + 4 + 2) * width, sizeof(pixel_t));
 	}
 	assert(local_bitmap_data != NULL);
 
