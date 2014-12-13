@@ -156,19 +156,19 @@ pixel_t* canny_edge_detection(const pixel_t* in,
 	const int nx = width;
 	const int ny = height;
 
-	pixel_t* after_Gx = calloc((width * (height+2)), sizeof(pixel_t));
+	pixel_t* after_Gx = calloc((width * (height + 2)), sizeof(pixel_t));
 	assert(after_Gx != NULL);
 
-	pixel_t* after_Gy = calloc((width * (height+2)), sizeof(pixel_t));
+	pixel_t* after_Gy = calloc((width * (height + 2)), sizeof(pixel_t));
 	assert(after_Gy != NULL);
 
-	pixel_t* local_out = (pixel_t*)calloc(width * (height+2), sizeof(pixel_t));
+	pixel_t* local_out = (pixel_t*)calloc(width * (height + 2), sizeof(pixel_t));
 	assert(local_out != NULL);
 
-	pixel_t *nms = calloc(nx * (ny+2) * sizeof(pixel_t), 1);
+	pixel_t *nms = calloc(nx * (ny + 2) * sizeof(pixel_t), 1);
 	assert(nms != NULL);
 
-	pixel_t *G = calloc(nx * (ny+2) * sizeof(pixel_t), 1);
+	pixel_t *G = calloc(nx * (ny + 2) * sizeof(pixel_t), 1);
 	assert(G != NULL);
 
 	gaussian_filter(in, local_out, nx, ny, tid, sigma);
@@ -377,7 +377,7 @@ int main(int argc, char* argv[]) {
 	bitmap_info_header_t ih;
 
 	if (argc != 3) {
-		perror("Wrong arguments: call with ./<exec> <filename> <num_threads");
+		printf("Wrong arguments: call with ./<exec> <filename> <num_threads \n");
 		exit(-1);
 	}
 
