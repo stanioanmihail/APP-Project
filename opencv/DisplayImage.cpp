@@ -12,11 +12,13 @@ Mat dst, detected_edges;
 Mat dest_gray;
 
 int edgeThresh = 1;
-int lowThreshold;
+int lowThreshold = 40;
 int const max_lowThreshold = 50;
 int ratio = 3;
 int kernel_size = 3;
 char window_name[] = "Edge Map";
+
+#define MAX_BRIGHTNESS 255
 
 /**
  * @function CannyThreshold
@@ -36,6 +38,23 @@ void CannyThreshold(int, void*)
   src_gray.copyTo( dst, detected_edges);
 
   cvtColor(dst, dest_gray, CV_GRAY2BGR);
+
+  for (int i = 0; i < dest_gray.rows; i++) {
+    for (int j = 0; j < dest_gray.cols; j++) {
+
+      if (dest_gray.at<cv::Vec3b>(i,j)[0] > 0) {
+        dest_gray.at<cv::Vec3b>(i,j)[0] = MAX_BRIGHTNESS;
+      }
+
+      if (dest_gray.at<cv::Vec3b>(i,j)[1] > 0) {
+        dest_gray.at<cv::Vec3b>(i,j)[1] = MAX_BRIGHTNESS;
+      }
+
+     if (dest_gray.at<cv::Vec3b>(i,j)[2] > 0) {
+        dest_gray.at<cv::Vec3b>(i,j)[2] = MAX_BRIGHTNESS;
+      }
+    }
+  }
 
   imshow( window_name, dest_gray );
  }
@@ -67,6 +86,9 @@ int main( int argc, char** argv )
 
   /// Wait until user exit program by pressing a key
   waitKey(0);
+
+  imwrite("opencv_out.bmp", dest_gray);
+
 
   return 0;
   }

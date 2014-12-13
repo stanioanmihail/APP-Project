@@ -99,6 +99,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named CompareImage
+
+# Build rule for target.
+CompareImage: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 CompareImage
+.PHONY : CompareImage
+
+# fast build rule for target.
+CompareImage/fast:
+	$(MAKE) -f CMakeFiles/CompareImage.dir/build.make CMakeFiles/CompareImage.dir/build
+.PHONY : CompareImage/fast
+
+#=============================================================================
 # Target rules for targets named DisplayImage
 
 # Build rule for target.
@@ -110,6 +123,30 @@ DisplayImage: cmake_check_build_system
 DisplayImage/fast:
 	$(MAKE) -f CMakeFiles/DisplayImage.dir/build.make CMakeFiles/DisplayImage.dir/build
 .PHONY : DisplayImage/fast
+
+CompareImage.o: CompareImage.cpp.o
+.PHONY : CompareImage.o
+
+# target to build an object file
+CompareImage.cpp.o:
+	$(MAKE) -f CMakeFiles/CompareImage.dir/build.make CMakeFiles/CompareImage.dir/CompareImage.cpp.o
+.PHONY : CompareImage.cpp.o
+
+CompareImage.i: CompareImage.cpp.i
+.PHONY : CompareImage.i
+
+# target to preprocess a source file
+CompareImage.cpp.i:
+	$(MAKE) -f CMakeFiles/CompareImage.dir/build.make CMakeFiles/CompareImage.dir/CompareImage.cpp.i
+.PHONY : CompareImage.cpp.i
+
+CompareImage.s: CompareImage.cpp.s
+.PHONY : CompareImage.s
+
+# target to generate assembly for a file
+CompareImage.cpp.s:
+	$(MAKE) -f CMakeFiles/CompareImage.dir/build.make CMakeFiles/CompareImage.dir/CompareImage.cpp.s
+.PHONY : CompareImage.cpp.s
 
 DisplayImage.o: DisplayImage.cpp.o
 .PHONY : DisplayImage.o
@@ -141,9 +178,13 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... CompareImage"
 	@echo "... DisplayImage"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... CompareImage.o"
+	@echo "... CompareImage.i"
+	@echo "... CompareImage.s"
 	@echo "... DisplayImage.o"
 	@echo "... DisplayImage.i"
 	@echo "... DisplayImage.s"
