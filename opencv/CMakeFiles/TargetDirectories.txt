@@ -1,2 +1,0 @@
-/home/apollo13/Desktop/APP_proiect/APP-Project/opencv/CMakeFiles/CompareImage.dir
-/home/apollo13/Desktop/APP_proiect/APP-Project/opencv/CMakeFiles/DisplayImage.dir
