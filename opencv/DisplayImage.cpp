@@ -9,6 +9,7 @@ using namespace cv;
 
 Mat src, src_gray;
 Mat dst, detected_edges;
+Mat dest_gray;
 
 int edgeThresh = 1;
 int lowThreshold;
@@ -33,7 +34,10 @@ void CannyThreshold(int, void*)
   dst = Scalar::all(0);
 
   src_gray.copyTo( dst, detected_edges);
-  imshow( window_name, dst );
+
+  cvtColor(dst, dest_gray, CV_GRAY2BGR);
+
+  imshow( window_name, dest_gray );
  }
 
 
