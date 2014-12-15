@@ -59,6 +59,22 @@ cd ../MPI
 make clean &> /dev/null
 cd ../opencv
 
+echo "***************OMP Test*********************"
+cd ../omp
+make clean &> /dev/null && make &> /dev/null
+cd ../opencv
+
+for image in $(ls ../images); do
+	echo "$image"
+	../omp/omp_canny "../images/$image" &> /dev/null
+	./CompareImage "out.bmp" "./refs/opencv_$image"
+done
+
+cd ../omp
+make clean &> /dev/null
+cd ../opencv
+
+
 rm -rf refs
 rm -rf *.bmp
 exit 0
