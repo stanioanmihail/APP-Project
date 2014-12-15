@@ -440,11 +440,14 @@ void convolution(const pixel_t *in, pixel_t *out, const float *kernel,
 		pixel = 0.0;
                 cx = 0;
                 cy = 0;
+
+		// reduction means that pixel will be privat for each thread and then will be added to the
+		// shared pixel variable
 		#pragma omp parallel for reduction(+:pixel) private(cx, cy, j, i) schedule(dynamic)
                 for (j = -khalf; j <= khalf; j++){
                     for (i = -khalf; i <= khalf; i++) {
-			cx = j + khalf;
-			cy = i + khalf;
+			cx = j + khalf; //instead of c=c+1 I have to components cx and cy which 
+			cy = i + khalf; // can be generated per thread
                         pixel += in[(n - j) * nx + m - i] * kernel[cx * kn + cy];
                     }
 		}
@@ -500,13 +503,15 @@ void gaussian_filter(const pixel_t *in, pixel_t *out,
  
     fprintf(stderr, "gaussian_filter: kernel size %d, sigma=%g\n",
             n, sigma);
-    size_t c = 0;
+    //size_t c = 0;
+    // i and j can generate dinamic for each thread a specific position in kernel matrix
+    #pragma omp parallel for schedule(dynamic) 
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++) {
-            kernel[c] = exp(-0.5 * (pow((i - mean) / sigma, 2.0) +
+            kernel[i * n + j] = exp(-0.5 * (pow((i - mean) / sigma, 2.0) +
                                     pow((j - mean) / sigma, 2.0)))
                         / (2 * M_PI * sigma * sigma);
-            c++;
+            //c++;
         }
  
     convolution(in, out, kernel, nx, ny, n, true);
@@ -556,6 +561,7 @@ pixel_t *canny_edge_detection(const pixel_t *in,
  
     convolution(out, after_Gy, Gy, nx, ny, 3, false);
  
+    #pragma omp parallel for schedule(dynamic) 
     for (int i = 1; i < nx - 1; i++)
         for (int j = 1; j < ny - 1; j++) {
             const int c = i + nx * j;
@@ -564,6 +570,7 @@ pixel_t *canny_edge_detection(const pixel_t *in,
         }
  
     // Non-maximum suppression, straightforward implementation.
+    #pragma omp parallel for schedule(dynamic) 
     for (int i = 1; i < nx - 1; i++)
         for (int j = 1; j < ny - 1; j++) {
             const int c = i + nx * j;
@@ -601,8 +608,11 @@ pixel_t *canny_edge_detection(const pixel_t *in,
  
     // Tracing edges with hysteresis . Non-recursive implementation.
     size_t c = 1;
+    #pragma omp parallel for schedule(dynamic) private(c) 
     for (int j = 1; j < ny - 1; j++)
         for (int i = 1; i < nx - 1; i++) {
+	    //calculate c using j and i
+	    c = (j - 1) * (nx - 2) + i;
             if (nms[c] >= tmax && out[c] == 0) { // trace edges
                 out[c] = MAX_BRIGHTNESS;
                 int nedges = 1;
@@ -630,7 +640,7 @@ pixel_t *canny_edge_detection(const pixel_t *in,
                         }
                 } while (nedges > 0);
             }
-            c++;
+            //c++;
         }
  
     free(after_Gx);
