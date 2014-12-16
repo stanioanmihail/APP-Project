@@ -1,0 +1,5 @@
+Step 0 - Connect to fep using ssh -Y -l user.name fep.grid.pub.ro
+Step 1 - Issue the following command: source modules
+Step 2 - make clean & make
+Step 3 - make fep // wait untill the job is done - you can check using: watch qstat
+Step 4 - go mpi_output.bmp
