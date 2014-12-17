@@ -1,14 +1,25 @@
+Task Management-ul echipei BBB
+
 Ioan-Mihail STAN
+----
 
 - serial:
-*analiza scriere/citire bmp
+*analiza scriere/citire bmp (implementarea unui cod alternativ de citire/scriere bitmap files)
 *conversie bitmap color to greyscale
-*conversie gryscale to bitmap 
+*conversie greyscale to bitmap black-white
 *analiza succinta cod serial
+   -- analiza codulul s-a facut prin incercarea unei implementari separate care urmeaza aceiasi pasi
+ca algoritmul utilizat, urmarind guidelines-urile de pe Wikipedia. Solutia foloseste vectori liniarizati
+greyscale
+*generarea/cautare input-ului(imagini) de diferite dimensiuni si diferite grade de computatie
 
 -mpi:
 *dezasamblarea in chunk-uri si asamblarea pozelor in nodul master
 *schimbul de mesaje
+*detectarea problemei marginilor fictive ale pozelor analizate in algoritmul serial folosit
+   -- algoritmul are tendinta sa analizeze diferit marginile pozelor, existand posibilitatea sectionarii
+imaginii finale in functie de chunkuri prin linii de pixel negrii
+*adaugarea bordurilor suplimentare in mesajul transmi pentru aplicarea matricelor kernel
 
 -pthreads:
 N/A
@@ -18,6 +29,11 @@ N/A
 permit
 *modificare indecs astfel incat sa faciliteze paralelizarea prin 
 generarea pozitiei curente independent de actiunile celorlalte thread-uri
+	-- in implementarea seriala parcurgerea matricelor kernel si matricei de pixel
+	se face prin cresterea unui contor unic 
+	-- separarea contorului unic in componentele linie si coloana, usor determinabile
+	de fiecare thread in parte in functie de variabilele private pe care le are
+*setarea zonelor critice
 
 -Metoda de testare:
 *rafinarea codului de aplicare filtru Canny Edge propus pe site-ul OpenCV
@@ -25,32 +41,49 @@ generarea pozitiei curente independent de actiunile celorlalte thread-uri
 fep
 *crearea unui script de testare corectitudine poze utilizand resursele unei
 singure masini
-*TODO: adpatarea scriptului astfel incat sa testeze solutia utilizand cozile
+*TODO: adaptarea scriptului astfel incat sa testeze solutia utilizand cozile
 de joburi puse la dispozitie pe cluster-ul facultatii
  
 
-Nicolae Flavian POPA
+Nicolae-Flavian POPA
+---
 
 - serial:
 *analiza amanuntita a logicii din spatele Canny Edge Detection Algorithm
+   -- analiza codulul s-a facut prin incercarea unei implementari separate care urmeaza aceiasi pasi
+ca algoritmul utilizat, dar solutia isi propunea sa utilizeze direct matrice 3D de pixeli
 *probarea si corectarea formulelor matematice din codul serial(exemplu:
 	algoritmul de calculare pad in pozele color bitmap)
 
 -mpi:
 *bordarea fragmentelor cu necesarul de linii de pixeli pentru aplicarea 
-matricelor kernel din algoritm
+matricelor kernel din algoritm(logica indecsilor)
 *modificarea idecsilor si a logici programului serial astfel incat acesta
 sa considere fragmentele ca mini-imagini pe care sa aplice filtrul, excluzand
 bordurile suplimentare
+*eliminarea bug-urilor de memorie gasite pe metoda pthreads prin portarea acestora pe metoda MPI
+*schimbul de mesaje
 
 -pthreads:
 *implementare solutie finala pthreads plecand de la logica MPI
+*eliminarea leak-urile de memorie
+*rezolvarea bug-urile de memorie aparute la impartirea pe taskuri prin generarea de teste valgrind/gdb
+*eliminarea deadlock-urilor aparute 
 
 -OpenMP
 N/A
 
 -Metoda de testare:
-*adaptarea unei solutii de Canny Edge propusa pe site-ul OpenCV
+*adaptarea solutiei de Canny Edge propusa pe site-ul OpenCV
 *crearea metodei de comparare pixeli
 *crearea fisierului de configurare care faciliteaza generarea de Makefile
 cu utilitarul cmake
+
+Concluzii finale:
+- pentru solutia serială s-a optat utilizarea variante adaptate de Ioan-Mihail Stan intrucat a fost considerata,
+de comun acord, mai optima decat varianta lui Nicolae-Flavian Popa
+- solutia aleasa scaleaza pentru imagini de dimesiuni mari
+	-- testarea a fost facuta cu utlitarul time
+- au fost utilizate doua metode de versionare (svn si git- preponderent git) care au facilitat lucrul optim in echipa
+- au fost dobandite cunostinte noi aplicabile pe orice proiect prin invatarea pattern-urilor clasice de 
+unit-testing 
