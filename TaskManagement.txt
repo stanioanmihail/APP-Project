@@ -1,0 +1,56 @@
+Ioan-Mihail STAN
+
+- serial:
+*analiza scriere/citire bmp
+*conversie bitmap color to greyscale
+*conversie gryscale to bitmap 
+*analiza succinta cod serial
+
+-mpi:
+*dezasamblarea in chunk-uri si asamblarea pozelor in nodul master
+*schimbul de mesaje
+
+-pthreads:
+N/A
+
+-OpenMP:
+*implementare paralelizare OpenMP in sectiunile codului serial care 
+permit
+*modificare indecs astfel incat sa faciliteze paralelizarea prin 
+generarea pozitiei curente independent de actiunile celorlalte thread-uri
+
+-Metoda de testare:
+*rafinarea codului de aplicare filtru Canny Edge propus pe site-ul OpenCV
+*eliminarea problemelor de incompatibilitate existente la rularea pe platforma
+fep
+*crearea unui script de testare corectitudine poze utilizand resursele unei
+singure masini
+*TODO: adpatarea scriptului astfel incat sa testeze solutia utilizand cozile
+de joburi puse la dispozitie pe cluster-ul facultatii
+ 
+
+Nicolae Flavian POPA
+
+- serial:
+*analiza amanuntita a logicii din spatele Canny Edge Detection Algorithm
+*probarea si corectarea formulelor matematice din codul serial(exemplu:
+	algoritmul de calculare pad in pozele color bitmap)
+
+-mpi:
+*bordarea fragmentelor cu necesarul de linii de pixeli pentru aplicarea 
+matricelor kernel din algoritm
+*modificarea idecsilor si a logici programului serial astfel incat acesta
+sa considere fragmentele ca mini-imagini pe care sa aplice filtrul, excluzand
+bordurile suplimentare
+
+-pthreads:
+*implementare solutie finala pthreads plecand de la logica MPI
+
+-OpenMP
+N/A
+
+-Metoda de testare:
+*adaptarea unei solutii de Canny Edge propusa pe site-ul OpenCV
+*crearea metodei de comparare pixeli
+*crearea fisierului de configurare care faciliteaza generarea de Makefile
+cu utilitarul cmake
