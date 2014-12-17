@@ -14,5 +14,7 @@ file_io.o: file_io.c
 
 run:
 	mpirun -n 4 ./$(TARGET) $1
+fep:
+	qsub -q ibm-opteron.q -pe openmpi*1 10 -cwd ./run.sh	
 clean:
-	rm -rf *~ *.o *.bmp $(TARGET)
+	rm -rf *~ *.o *.bmp run.sh.* $(TARGET)

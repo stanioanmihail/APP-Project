@@ -57,7 +57,7 @@ void CannyThreshold(int, void*)
     }
   }
 
-  imshow( window_name, dest_gray );
+  //imshow( window_name, dest_gray );
  }
 
 
