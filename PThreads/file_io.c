@@ -155,8 +155,7 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
  
     const uint32_t offset = sizeof(bmpfile_magic_t) +
                             sizeof(bmpfile_header_t) +
-                            sizeof(bitmap_info_header_t) +
-                            ((1U << bmp_ih->bitspp) * 4);
+                            sizeof(bitmap_info_header_t); 
  
     const bmpfile_header_t bmp_fh = {
         .filesz = offset + bmp_ih->bmp_bytesz,
@@ -172,15 +171,6 @@ bool save_bmp(const char *filename, const bitmap_info_header_t *bmp_ih,
     if (fwrite(bmp_ih, sizeof(bitmap_info_header_t), 1, filePtr) != 1) {
         fclose(filePtr);
         return true;
-    }
- 
-    // Palette
-    for (size_t i = 0; i < (1U << bmp_ih->bitspp); i++) {
-        const rgb_t color = {(uint8_t)i, (uint8_t)i, (uint8_t)i};
-        if (fwrite(&color, sizeof(rgb_t), 1, filePtr) != 1) {
-            fclose(filePtr);
-            return true;
-        }
     }
  
     // We use int instead of uchar, so we can't write img
