@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #set -x
-source modules_opencv
-source ../MPI/modules
+source modules_opencv &> /dev/null
+source ../MPI/modules &> /dev/null
 THOLD=40
 
 rm -f out.bmp pthreads_out.bmp mpi_out.bmp
