@@ -5,8 +5,10 @@
 
 int main(int argc, char *argv[]){
 
-	if(argc != 3) return -1;
-
+	if(argc != 3) {
+		fprintf(stderr, "./gen <image> <multiplication_factor>\n");
+		return -1;
+	}
 	char *file;
 	char *aux;
 	char out_file[100];
