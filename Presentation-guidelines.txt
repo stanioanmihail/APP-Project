@@ -1,0 +1,46 @@
+ 0. Pagina de cuprins 
+ 1. Scurta introducere despre Canny Edge Detection
+	- imagini cu inainte si dupa
+	- descriere succinta algoritm
+	- descriere succinta filtru
+ 2. Evolutia solutiei seriale - pe o coada sau doua 
+	- stabilirea a unui maxim de 3 poze de test cu dimensiuni variabile ( ar trebui totusi sa fie cam in acelasi spectru de dimensiuni pentru a putea vedea graficul la o scala buna)
+	- ar fi bine sa testam solutia seriala si pe arhitecturi cu mai multe procesoare pentru ca - din ce am observat la SM - tinde sa scaleze probabil din cauza optimizarii din compilator a operatiilor I/O sau a apelurilor de sistem
+	- graficul ar putea sa fie oy - timp ox - numar procesoare, si cate o linie pentru fiecare test (fiecare poza)
+
+ 3. Evolutia solutiilor paralele si distribuite
+	- pe aceleasi imagini vom testa pe 2 - 4 - 8 - (10 - 16) daca ne permite coada
+	- vom realiza cate un grafic pentru fiecare solutie conform specificatiilor de la pasul 2
+
+ 4 Compararea solutiilor intre ele
+	- pentru un test mai relevant ( o imagine care a dat cele mai ok rezultate) comparatie intre toate 4 solutiile
+	- putem face grafice si intre fiecare 2 solutii - dar s-ar putea sa nu mai stim ce concluzii am tras pe fiecare cand prezentam propriu-zis
+
+ 5 Profiling
+	- observare functii time-consuming si existenta thread-urilor
+	- putem face profiling pe toate solutiile (trebuie schimbati doar parametrii) - profilingul se va face tot pe imaginea aleasa la punctul 4
+
+ 6 Sursa de erori - rezultatele furnizate de tester 
+
+END
+
+- pre-rechizite:
+(pt scurta introducere) o imagine de dimensiune mica + aceiasi imagine supusa filtrului 
+(generarea a max 3 imaginii mari - pentru o observatie mai clara) si utilizarea acestora pentru determinarea timpilor 
+(pt grafice) - timpul petrecut pana la determinarea solutiei (comanda time)
+(graficele) - in functie de rezultatelele generate anterior putem genera graficele direct in power-point - facem cate un grafic de mana pentru fiecare solutie uramnd ca pentru celelalte grafice sa folosim copy-paste pentru date
+	Avem nevoie de urmatoarele grafice:
+	- (optional) serial
+	- openmp
+	- phtreads
+	- mpi
+	- openmp vs pthreads + (linia serial - pentru a se vedea la ce distanta de timp sunt)
+	- openmp vs mpi + (linia serial)
+	- pthreads vs mpi + (linia serial)
+	- toate patru implementarile
+(profiling) - alegerea unei singure imagini
+	- putem face profiling atat pe mpi cat si pe openmp si pthreads
+		- asta o sa dureze cel mai mult din cauza fep-ului - dar daca facem unul putem adapta comanda direct si doar interpretarea o vom face cu utilitarul analizer
+(calculul speed-up-ului si eficentei - profiling) - sunt cele mai usoare calcule de facut
+
+DONE!
