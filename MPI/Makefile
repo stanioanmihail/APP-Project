@@ -15,6 +15,10 @@ file_io.o: file_io.c
 run:
 	mpirun -n 4 ./$(TARGET) $1
 fep:
-	qsub -q ibm-opteron.q -pe openmpi*1 10 -cwd ./run.sh	
+	qsub -q ibm-nehalem.q -pe openmpi*1 10 -cwd ./runn.sh	
+profiling:
+	qsub -q ibm-nehalem.q -pe openmpi*1 10 -cwd ./script_profiling.sh	
 clean:
 	rm -rf *~ *.o *.bmp run.sh.* $(TARGET)
+clean-extra:
+	rm -rf *.mpirez testing runn.sh.*

@@ -12,6 +12,9 @@ pthreads_canny.o: pthreads_canny.c
 file_io.o: file_io.c
 	gcc --std=c99 -g -c $^ $(CCFLAGS)
 
+profiling:
+	qsub -q ibm-nehalem -cwd ./profiling.sh
+
 run:
 	./$(TARGET) $1 $2
 clean:
