@@ -1,5 +1,5 @@
 cd MPI/
-gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'MPI'; set term png; set output 'mpi.png'; plot 'alps_x16.rez' using 1:2 title 'Alps x16' with linespoints, 'alps_x18.rez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20' using 1:2 title 'Alps x20' with linespoints"
+gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'MPI'; set term png; set output 'mpi.png'; plot 'alps_x16.mpirez' using 1:2 title 'Alps x16' with linespoints, 'alps_x18.mpirez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20.mpirez' using 1:2 title 'Alps x20' with linespoints"
 cd ../
 
 #cd omp/

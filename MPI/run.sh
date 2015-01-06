@@ -4,7 +4,7 @@ module load compilers/gnu-4.6.3
 
 files=(color50000_3 color100000_3 color150000_3 color500000_3 color1000000_3 color3000000_3 color5000000_3)
 input=.txt
-output=.rez
+output=.mpirez
 
 for i in ${files[*]}
 do
