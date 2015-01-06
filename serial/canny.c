@@ -479,8 +479,8 @@ void gaussian_filter(const pixel_t *in, pixel_t *out,
     const float mean = (float)floor(n / 2.0);
     float kernel[n * n]; // variable length array
  
-    fprintf(stderr, "gaussian_filter: kernel size %d, sigma=%g\n",
-            n, sigma);
+    //fprintf(stderr, "gaussian_filter: kernel size %d, sigma=%g\n",
+    //       n, sigma);
     size_t c = 0;
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++) {
@@ -635,7 +635,7 @@ int main(const int argc, const char ** const argv)
         fprintf(stderr, "main: BMP image not loaded.\n");
         return 1;
     }
-    printf("Info: %d x %d x %d\n", ih.width, ih.height, ih.bitspp);
+   // printf("Info: %d x %d x %d\n", ih.width, ih.height, ih.bitspp);
  
     const pixel_t *out_bitmap_data =
         canny_edge_detection(in_bitmap_data, &ih, 45, 50, 1.0f);

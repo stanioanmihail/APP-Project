@@ -1,13 +1,16 @@
 cd MPI/
-gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'MPI'; set term png; set output 'mpi.png'; plot 'alps_x16.mpirez' using 1:2 title 'Alps x16' with linespoints, 'alps_x18.mpirez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20.mpirez' using 1:2 title 'Alps x20' with linespoints"
+gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'MPI'; set term png; set output 'mpi.png'; plot 'optheron_alps_x16.bmp.mpirez' using 1:2 title 'Alps x16 Optheron' with linespoints, 'nehalem_alps_x16.bmp.mpirez' using 1:2 title 'Alps x16 Nehalem' with linespoints" 
+#'alps_x18.mpirez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20.mpirez' using 1:2 title 'Alps x20' with linespoints"
 cd ../
 
 cd omp/
-gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'OpenMP'; set term png; set output 'omp.png'; plot 'alps_x16.omprez' using 1:2 title 'Alps x16' with linespoints, 'alps_x18.omprez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20.omprez' using 1:2 title 'Alps x20' with linespoints"
+gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'OpenMP'; set term png; set output 'omp.png'; plot 'nehalem_alps_x16.bmp.omprez' using 1:2 title 'Alps x16' with linespoints" 
+#'alps_x18.rez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20' using 1:2 title 'Alps x20' with linespoints"
 cd ../
 
 cd PThreads/
-gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'PThreads'; set term png; set output 'pthreads.png'; plot 'alps_x16.pthreadsrez' using 1:2 title 'Alps x16' with linespoints, 'alps_x18.pthreadsrez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20.pthreadsrez' using 1:2 title 'Alps x20' with linespoints"
+gnuplot  -persist -e "set xlabel 'Number of Threads'; set ylabel 'Time(seconds)'; set title 'PThreads'; set term png; set output 'pthreads.png'; plot 'nehalem_alps_x16.bmp.pthreadsrez' using 1:2 title 'Alps x16 Nehalem' with linespoints"
+#'alps_x18.rez' using 1:2 title 'Alps x18' with linespoints, 'alps_x20' using 1:2 title 'Alps x20' with linespoints"
 cd ../
 
 #cd omp_vs_mpi/
