@@ -4,7 +4,7 @@ module load compilers/gnu-4.6.3
 
 files=(../plus_size_img_gen/alps_x16 ../plus_size_img_gen/alps_x18 ../plus_size_img_gen/alps_x20)
 input=.bmp
-output=.rez
+output=.omprez
 
 for i in ${files[*]}
 do
@@ -25,6 +25,6 @@ do
 		export OMP_NUM_THREADS=$j
 		(time ./omp_canny $fisier_in) &> $temp_file
 		echo -ne "$j\t" >> $fisier_out
-		cat $temp_file | head -2 | tail -1| cut -f 2 >> $fisier_out
+		cat $temp_file | head -2 | tail -1| cut -f 2 | tr -d "ms" | tr -d "0" >> $fisier_out
 	done 
 done

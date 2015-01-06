@@ -4,7 +4,7 @@ module load compilers/gnu-4.6.3
 
 files=(../plus_size_img_gen/alps_x16 ../plus_size_img_gen/alps_x18 ../plus_size_img_gen/alps_x20)
 input=.bmp
-output=.pthreadsrez
+output=.mpirez
 
 for i in ${files[*]}
 do
@@ -22,7 +22,7 @@ do
 	for j in 1 2 4 8
 	do
 		#(time mpirun -n $j ./mpi_main $fisier_in 3 0.001) >> $fisier_out 2>&1
-		(time ./pthreads_canny $fisier_in $j) &> $temp_file
+		(time mpirun -n $j ./mpi_canny $fisier_in) &> $temp_file
 		echo -ne "$j\t" >> $fisier_out
 		cat $temp_file | head -2 | tail -1| cut -f 2 | tr -d "ms" | tr -d "0" >> $fisier_out
 	done 
